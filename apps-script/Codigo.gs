@@ -48,10 +48,9 @@ function prepararHoja() {
   }
 
   carpetaFotos();
-  // getUi() no está disponible en todos los contextos de ejecución.
-  const aviso = 'Listo. Las hojas FIGURAS y VENTAS están preparadas.';
-  Logger.log(aviso);
-  try { SpreadsheetApp.getUi().alert(aviso); } catch (err) {}
+  // No usamos getUi().alert: el diálogo aparece en la pestaña de la hoja y
+  // deja la ejecución colgada esperando un clic que el usuario no ve.
+  Logger.log('Listo. Las hojas FIGURAS y VENTAS están preparadas.');
 }
 
 
@@ -226,7 +225,6 @@ function importarDesdeCarpeta() {
                   saltadas + ' saltadas porque ya estaban.\n\n' +
                   'Abra la app y toque el punto de arriba para sincronizar.';
   Logger.log(resumen);
-  try { SpreadsheetApp.getUi().alert(resumen); } catch (err) {}
   return resumen;
 }
 
@@ -385,7 +383,6 @@ function generarReporte() {
                   'Para guardarlo como archivo:\n' +
                   'Archivo → Descargar → Microsoft Excel (.xlsx) o Documento PDF (.pdf)';
   Logger.log(resumen);
-  try { SpreadsheetApp.getUi().alert(resumen); } catch (err) {}
   return resumen;
 }
 
