@@ -1,0 +1,10 @@
+{
+  "name": "filemon-inventario",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Inventario de figuras de yeso - pagina estatica para GitHub Pages",
+  "type": "module",
+  "scripts": {
+    "check": "node verificar.mjs"
+  }
+}

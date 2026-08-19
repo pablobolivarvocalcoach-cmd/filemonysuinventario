@@ -146,4 +146,14 @@ Si dos personas editan **la misma figura** al mismo tiempo desde dos celulares, 
 index.html              La app. Un solo archivo, sin dependencias.
 apps-script/Codigo.gs   El puente con Sheets y Drive.
 README.md               Este archivo.
+CLAUDE.md               Notas para trabajar en el repo con Claude Code.
+package.json            Expone "npm run check".
+verificar.mjs           Revisa que la estructura del repositorio esté correcta.
+```
+
+Para confirmar que la estructura sigue correcta (nada anidado, nada duplicado, sin `.zip`
+sueltos) antes de publicar en GitHub Pages:
+
+```bash
+npm run check
 ```
