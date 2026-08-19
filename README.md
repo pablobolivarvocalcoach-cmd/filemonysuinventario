@@ -163,60 +163,62 @@ de la app o escríbalo en el nombre del archivo.
 
 ---
 
-## Cargar las 100 fotos de una vez (desde Drive)
+## El modelo: molde, pieza, producto
 
-Más rápido y más seguro que subirlas desde el celular.
+**Molde** es la plancha: foto, caja donde está, estado, días de producción.
+**Pieza** es cada figura que sale de ella: número, nombre y cuántas hay en bodega.
+**Producto** es lo que se cobra: Kit de 3 piezas, Kit de letras con el nombre.
 
-1. En Drive, cree una carpeta y suba ahí su carpeta de fotos tal como la tiene
-   en el computador (arrastrar y soltar). El nombre de cada archivo debe seguir
-   siendo descriptivo: `ABEJA MIEL FLOR NIÑA.jpg`.
-2. En el editor de Apps Script, en la constante `CARPETA_ORIGEN` (arriba de
-   `importarDesdeCarpeta`), escriba el nombre exacto de esa carpeta.
-3. Guarde, elija la función **importarDesdeCarpeta** y presione **Ejecutar**.
-4. Al terminar le muestra cuántas agregó y cuántas saltó por estar repetidas.
-5. Abra la app y toque el punto de arriba para sincronizar.
+El cliente pregunta por una pieza ("¿tienes abejas?"), usted busca por ahí, y la
+respuesta lista trae la existencia, el plazo y los precios de sus productos.
 
-Ejecutarlo dos veces no duplica nada: compara los nombres y salta las que ya
-estén. Puede volver a correrlo cada vez que agregue moldes nuevos a la carpeta.
+Las piezas que todavía no ha nombrado aparecen como *Sin nombre — por completar*,
+y los moldes a los que les faltan piezas muestran cuántas. Nadie tiene que
+acordarse de los pendientes.
 
-Las fotos se quedan donde están, en su Drive. El script solo las marca como
-visibles por enlace y guarda la dirección en la hoja.
+---
+
+## Cargar el catálogo desde Drive
+
+1. En Drive, cree una carpeta llamada exactamente **FILEMON MOLDES** y suba ahí
+   sus fotos con los nombres descriptivos: `ABEJA MIEL FLOR NIÑA.jpg`.
+2. En Apps Script, elija la función **importarDesdeCarpeta** y presione Ejecutar.
+3. Cada palabra del nombre se vuelve una pieza numerada. "ABEJA MIEL FLOR" crea
+   un molde con tres piezas: 1 Abeja, 2 Miel, 3 Flor.
+4. Abra la app, sincronice, y **revise que el número de cada pieza coincida con
+   la foto**: el orden del nombre del archivo no siempre es el orden físico.
+
+Ejecutarlo dos veces no duplica. Puede volver a correrlo cada vez que agregue
+moldes a la carpeta.
 
 ---
 
 ## Quién actualiza qué
 
-**Las ventas y las existencias, desde la app.** Registrar una venta descuenta
-la pieza y deja la fila en la pestaña VENTAS. Su esposa puede usar la misma
+**Las existencias y las ventas, desde la app.** Su esposa puede usar la misma
 página desde su celular: le pasa la dirección, la URL `/exec` y la clave.
 
-**Si prefiere escribir directo en la hoja**, cambie la columna `existencia` en
-la pestaña FIGURAS. La app lo recoge al sincronizar. Hágalo solo cuando el
-punto de la app esté verde: si hay cambios pendientes por subir, el último en
-sincronizar gana y se pierde el ajuste del otro.
+Registrar una venta: menú ··· → *Registrar una venta*. Escoge el producto, busca
+las piezas que salieron, y el sistema descuenta cada una.
+
+**Si prefiere escribir directo en la hoja**, cambie la columna `existencia` en la
+pestaña PIEZAS. La app lo recoge al sincronizar. Hágalo solo cuando el punto de
+la app esté verde.
 
 ---
 
 ## Reportes
 
-**Desde el celular** — menú ··· → *Ventas por mes, Excel y PDF*:
+**Desde el celular** — menú ··· → *Ventas por mes, Excel y PDF*: barras de los
+últimos 12 meses, inventario e historial en CSV para Excel, y reporte imprimible
+(elija *Guardar como PDF*).
 
-- Barras de los últimos 12 meses, con el mes pico resaltado.
-- **Inventario completo** y **Historial de ventas** se descargan como CSV y se
-  abren en Excel con doble clic (van con punto y coma y codificación UTF-8, que
-  es lo que espera Excel en español).
-- **Generar reporte** abre la ventana de impresión: elija *Guardar como PDF*.
+**Desde la hoja** — ejecute `generarReporte()` en Apps Script. Arma la pestaña
+REPORTE con el análisis de temporada, las piezas por reponer y los moldes
+incompletos. Para el archivo: *Archivo → Descargar → Microsoft Excel* o *PDF*.
 
-**Desde la hoja, para el análisis de temporada** — en Apps Script ejecute
-`generarReporte()`. Arma la pestaña REPORTE con el resumen, las ventas mes a
-mes, los meses fuertes con todos los años sumados, las figuras más vendidas y
-lo que hay por reponer. Para guardarlo: *Archivo → Descargar → Microsoft Excel*
-o *Documento PDF*.
-
-Con menos de un año de ventas el reporte lo advierte: muestra lo vendido, pero
-no lo llama temporada. Para acortar esa espera puede escribir a mano las ventas
-que recuerde de meses pasados en la pestaña VENTAS (fecha, código, figura,
-cantidad, precio, total). Con eso el análisis arranca con historia.
+Con menos de un año de ventas el reporte lo advierte: muestra lo vendido, pero no
+lo llama temporada.
 
 ---
 

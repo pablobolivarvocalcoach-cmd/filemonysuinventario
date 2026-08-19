@@ -19,12 +19,10 @@
   }
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{
-    font-family:var(--texto); color:var(--grafito); background:var(--yeso);
-    background-image:radial-gradient(rgba(255,255,255,.55) 1px,transparent 1px);
-    background-size:4px 4px; -webkit-font-smoothing:antialiased;
-  }
-  #app{max-width:720px;margin:0 auto;min-height:100vh;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+  body{font-family:var(--texto);color:var(--grafito);background:var(--yeso);
+       background-image:radial-gradient(rgba(255,255,255,.55) 1px,transparent 1px);
+       background-size:4px 4px;-webkit-font-smoothing:antialiased}
+  #app{max-width:720px;margin:0 auto;min-height:100vh;padding-bottom:104px}
   button{font-family:inherit;cursor:pointer}
   input,textarea,select{font-family:inherit;font-size:16px}
   :focus-visible{outline:2.5px solid var(--tinta);outline-offset:2px}
@@ -33,9 +31,8 @@
        position:sticky;top:0;z-index:40;box-shadow:0 6px 18px rgba(43,52,57,.16)}
   .marca{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
   .marca h1{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin:0;color:#fff}
-  .sync{display:flex;align-items:center;gap:7px;background:none;border:none;
-        font-family:var(--dato);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-        color:rgba(232,232,227,.75);padding:6px 4px}
+  .sync{display:flex;align-items:center;gap:7px;background:none;border:none;font-family:var(--dato);
+        font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(232,232,227,.75);padding:6px 4px}
   .punto{width:8px;height:8px;border-radius:50%;background:var(--tiza);flex:0 0 8px}
   .punto.ok{background:#4FCF9C} .punto.mal{background:#E07A6E} .punto.trab{background:#E0B96E}
   @media (prefers-reduced-motion:no-preference){ .punto.trab{animation:late 1s ease-in-out infinite} }
@@ -45,8 +42,8 @@
   .buscar input{width:100%;padding:15px 44px 15px 16px;border:none;border-radius:3px;
                 background:var(--yeso-alto);color:var(--grafito);font-size:17px;font-weight:500}
   .buscar input::placeholder{color:#9A9A93;font-weight:400}
-  .limpiar{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;
-           background:transparent;color:var(--tiza);font-size:22px;line-height:1;padding:8px 10px}
+  .limpiar{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;
+           color:var(--tiza);font-size:22px;line-height:1;padding:8px 10px}
 
   .chips{display:flex;gap:7px;margin-top:11px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
@@ -64,33 +61,32 @@
           font-family:var(--dato);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
   .copiar.ok{background:var(--listo)}
 
-  .sello{display:inline-block;font-family:var(--dato);font-weight:600;font-size:10.5px;
-         letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;
-         border:1.5px solid currentColor;border-radius:2px}
-  .sello.listo{color:var(--listo)} .sello.encargo{color:var(--encargo)} .sello.no{color:var(--alerta)}
+  .sello{display:inline-block;font-family:var(--dato);font-weight:600;font-size:10.5px;letter-spacing:.1em;
+         text-transform:uppercase;padding:4px 8px;border:1.5px solid currentColor;border-radius:2px}
+  .sello.listo{color:var(--listo)} .sello.encargo{color:var(--encargo)}
+  .sello.no{color:var(--alerta)} .sello.vacio{color:var(--tiza)}
 
   .cuerpo{padding:14px}
   .conteo{font-family:var(--dato);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
           color:var(--tiza);margin:4px 2px 11px}
   .ficha{display:flex;gap:13px;background:#fff;border:1px solid var(--linea);border-radius:3px;
-         padding:11px;margin-bottom:9px;width:100%;text-align:left;position:relative}
+         padding:11px;margin-bottom:9px;width:100%;text-align:left;position:relative;align-items:center}
   .ficha:active{background:#FAFAF7}
   .ficha.pend::after{content:'';position:absolute;top:7px;right:7px;width:7px;height:7px;
                      border-radius:50%;background:#E0B96E}
-  .foto{width:66px;height:66px;flex:0 0 66px;border-radius:2px;background:#EDEDE7 center/cover no-repeat;
+  .foto{width:76px;height:76px;flex:0 0 76px;border-radius:2px;background:#F4F4F0;overflow:hidden;
         display:flex;align-items:center;justify-content:center;font-family:var(--dato);
         font-size:9px;color:#B4B4AC;letter-spacing:.06em}
+  .foto img{width:100%;height:100%;object-fit:contain;display:block}
   .info{flex:1;min-width:0}
   .cod{font-family:var(--dato);font-size:10.5px;color:var(--tiza);letter-spacing:.08em}
   .nom{font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em;
        margin:2px 0 6px;line-height:1.2;overflow-wrap:anywhere}
+  .nom.gris{color:var(--tiza);font-style:italic}
   .pie{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .precio{font-family:var(--dato);font-size:12px;color:var(--pizarra-2)}
-  .cant{flex:0 0 auto;align-self:center;text-align:center;padding-left:6px;
-        border-left:1px solid var(--linea);min-width:58px}
-  .cant b{font-family:var(--display);font-weight:800;font-size:26px;line-height:1}
-  .cant span{display:block;font-family:var(--dato);font-size:9px;color:var(--tiza);
-             letter-spacing:.08em;margin-top:3px}
+  .cant{flex:0 0 auto;text-align:center;padding-left:8px;border-left:1px solid var(--linea);min-width:56px}
+  .cant b{font-family:var(--display);font-weight:800;font-size:24px;line-height:1}
+  .cant span{display:block;font-family:var(--dato);font-size:9px;color:var(--tiza);letter-spacing:.08em;margin-top:3px}
 
   .vacio{text-align:center;padding:48px 26px}
   .vacio h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0 0 8px}
@@ -104,8 +100,8 @@
   .btn-verde{background:var(--listo);color:#fff}
   .btn[disabled]{opacity:.5;pointer-events:none}
 
-  .flotante{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:45;display:flex;gap:9px}
-  .flotante .btn{box-shadow:0 5px 16px rgba(43,52,57,.3);padding:14px 20px}
+  .flotante{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:45;display:flex;gap:9px}
+  .flotante .btn{box-shadow:0 5px 16px rgba(43,52,57,.3);padding:14px 18px}
   .btn-mas{background:var(--tinta);color:#fff}
 
   .capa{position:fixed;inset:0;background:rgba(26,31,34,.55);z-index:60;
@@ -121,7 +117,7 @@
                text-transform:uppercase;color:var(--pizarra-2);margin-bottom:5px}
   .campo input,.campo textarea,.campo select{width:100%;padding:11px 12px;border:1px solid var(--linea);
                                              border-radius:3px;background:#fff;color:var(--grafito)}
-  .campo textarea{resize:vertical;min-height:62px;line-height:1.5}
+  .campo textarea{resize:vertical;min-height:58px;line-height:1.5}
   .pista{display:block;margin-top:5px;font-size:12px;color:var(--tiza);line-height:1.45;
          font-family:var(--texto);letter-spacing:0;text-transform:none}
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -131,11 +127,27 @@
                    border-radius:3px;font-size:22px;line-height:1;color:var(--pizarra)}
   .contador input{flex:1;text-align:center;font-family:var(--display);font-weight:800;font-size:24px}
 
-  .foto-caja{display:flex;gap:13px;align-items:center;margin-bottom:16px;padding:13px;
+  .foto-caja{display:flex;gap:13px;align-items:flex-start;margin-bottom:16px;padding:13px;
              background:#fff;border:1px solid var(--linea);border-radius:3px}
-  .foto-prev{width:76px;height:76px;flex:0 0 76px;border-radius:2px;background:#EDEDE7 center/cover no-repeat;
+  .foto-prev{width:120px;height:120px;flex:0 0 120px;border-radius:2px;background:#F4F4F0;overflow:hidden;
              display:flex;align-items:center;justify-content:center;font-family:var(--dato);
              font-size:9px;color:#B4B4AC}
+  .foto-prev img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .18s ease}
+  .girar{display:flex;gap:7px;margin-top:7px}
+  .girar button{flex:1;padding:10px;border:1.5px solid var(--pizarra);background:#fff;
+                border-radius:3px;font-size:17px;line-height:1;color:var(--pizarra)}
+
+  .lista-piezas{background:#fff;border:1px solid var(--linea);border-radius:3px;overflow:hidden}
+  .pieza{display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid var(--linea);
+         width:100%;text-align:left;background:none;border-left:none;border-right:none;border-top:none}
+  .pieza:last-child{border-bottom:none}
+  .pieza:active{background:#FAFAF7}
+  .pieza .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--pizarra);color:#fff;
+            display:flex;align-items:center;justify-content:center;font-family:var(--dato);font-size:11px}
+  .pieza .n.sin{background:var(--tiza)}
+  .pieza .t{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
+  .pieza .t i{color:var(--tiza);font-size:13px}
+  .pieza .e{flex:0 0 auto;font-family:var(--dato);font-size:12px;color:var(--pizarra-2)}
 
   .aviso{background:#fff;border:1px solid var(--linea);border-left:4px solid var(--encargo);
          padding:12px 13px;border-radius:3px;font-size:13.5px;line-height:1.55;margin-bottom:14px}
@@ -148,28 +160,11 @@
   .tarjeta span{font-family:var(--dato);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
                 color:var(--tiza);margin-top:5px;display:block}
 
-  #impresion{ display:none; }
-  @media print{
-    .top, .flotante, .capa, .brindis, #panel, .cuerpo{ display:none !important; }
-    #app{ padding:0; max-width:none; background:#fff; }
-    #impresion{ display:block; padding:0; color:#000; font-size:11pt; }
-    #impresion h1{ font-family:var(--display); font-size:20pt; margin:0 0 2pt; }
-    #impresion h2{ font-family:var(--display); font-size:12pt; margin:16pt 0 5pt;
-                   border-bottom:1pt solid #999; padding-bottom:3pt; }
-    #impresion table{ width:100%; border-collapse:collapse; font-size:9.5pt; }
-    #impresion th{ text-align:left; border-bottom:1pt solid #333; padding:4pt 3pt; font-size:8pt;
-                   text-transform:uppercase; letter-spacing:.05em; }
-    #impresion td{ border-bottom:0.5pt solid #ccc; padding:4pt 3pt; }
-    #impresion .num{ text-align:right; font-variant-numeric:tabular-nums; }
-    #impresion .pie{ margin-top:14pt; font-size:8pt; color:#555; }
-    @page{ margin:14mm; }
-  }
-
-  .barra{ display:flex; align-items:center; gap:9px; margin-bottom:6px; font-size:13px }
-  .barra span:first-child{ flex:0 0 62px; font-family:var(--dato); font-size:11px; color:var(--pizarra-2) }
-  .barra i{ display:block; height:16px; background:var(--tinta); border-radius:1px; min-width:2px }
-  .barra .val{ flex:0 0 auto; font-family:var(--dato); font-size:11px; color:var(--tiza) }
-  .barra.pico i{ background:var(--encargo) }
+  .barra{display:flex;align-items:center;gap:9px;margin-bottom:6px;font-size:13px}
+  .barra span:first-child{flex:0 0 62px;font-family:var(--dato);font-size:11px;color:var(--pizarra-2)}
+  .barra i{display:block;height:16px;background:var(--tinta);border-radius:1px;min-width:2px}
+  .barra .val{flex:0 0 auto;font-family:var(--dato);font-size:11px;color:var(--tiza)}
+  .barra.pico i{background:var(--encargo)}
 
   .brindis{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--pizarra);
            color:#fff;padding:11px 18px;border-radius:3px;font-size:13.5px;z-index:80;
@@ -177,6 +172,23 @@
   @media (prefers-reduced-motion:no-preference){
     .brindis{animation:sube .22s ease-out}
     @keyframes sube{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+  }
+
+  #impresion{display:none}
+  @media print{
+    .top,.flotante,.capa,.brindis,#panel,.cuerpo{display:none !important}
+    #app{padding:0;max-width:none;background:#fff}
+    #impresion{display:block;color:#000;font-size:11pt}
+    #impresion h1{font-family:var(--display);font-size:20pt;margin:0 0 2pt}
+    #impresion h2{font-family:var(--display);font-size:12pt;margin:16pt 0 5pt;
+                  border-bottom:1pt solid #999;padding-bottom:3pt}
+    #impresion table{width:100%;border-collapse:collapse;font-size:9.5pt}
+    #impresion th{text-align:left;border-bottom:1pt solid #333;padding:4pt 3pt;font-size:8pt;
+                  text-transform:uppercase;letter-spacing:.05em}
+    #impresion td{border-bottom:.5pt solid #ccc;padding:4pt 3pt}
+    #impresion .num{text-align:right}
+    #impresion .pie{margin-top:14pt;font-size:8pt;color:#555}
+    @page{margin:14mm}
   }
 </style>
 </head>
@@ -192,11 +204,11 @@
       <button class="limpiar" id="limpiar" aria-label="Limpiar" style="display:none">×</button>
     </div>
     <div class="chips" id="chips">
-      <button class="chip" data-f="todas" aria-pressed="true">Todas</button>
-      <button class="chip" data-f="listo" aria-pressed="false">Listas hoy</button>
-      <button class="chip" data-f="encargo" aria-pressed="false">Por encargo</button>
-      <button class="chip" data-f="no" aria-pressed="false">Sin molde</button>
-      <button class="chip" data-f="bajo" aria-pressed="false">Se está acabando</button>
+      <button class="chip" data-f="todas" aria-pressed="true">Piezas</button>
+      <button class="chip" data-f="listo" aria-pressed="false">En bodega</button>
+      <button class="chip" data-f="sinnombre" aria-pressed="false">Sin nombre</button>
+      <button class="chip" data-f="bajo" aria-pressed="false">Se acaba</button>
+      <button class="chip" data-f="moldes" aria-pressed="false">Moldes</button>
     </div>
   </div>
 
@@ -209,7 +221,7 @@
   <div id="impresion"></div>
 
   <div class="flotante">
-    <button class="btn btn-mas" id="nueva">+ Figura</button>
+    <button class="btn btn-mas" id="nuevo">+ Molde</button>
     <button class="btn btn-primario" id="menu">···</button>
   </div>
 </div>
@@ -220,10 +232,11 @@
 const $ = s => document.querySelector(s);
 const app = $('#app');
 
-let figuras = [], ventas = [], cola = [], config = {url:'', clave:''};
+let moldes = [], piezas = [], productos = [], ventas = [], cola = [];
+let config = {url:'', clave:''};
 let filtro = 'todas', consulta = '', sincronizando = false, drenando = false, listo = false;
 
-/* ══════════ almacenamiento local (caché) ══════════ */
+/* ══════════ caché local ══════════ */
 const cache = {
   async get(k){
     try { if (window.storage){ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } } catch(e){}
@@ -237,22 +250,59 @@ const cache = {
 
 /* ══════════ utilidades ══════════ */
 const limpio = t => (t||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-const esc = t => String(t == null ? '' : t)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-const umbral = f => (f.minimo === 0 || f.minimo === '0' || Number(f.minimo)) ? Number(f.minimo) : 3;
 const pesos  = n => '$' + (Number(n)||0).toLocaleString('es-CO',{maximumFractionDigits:0});
+const esc = t => String(t==null?'':t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function estado(f){
-  if (f.molde === 'danado' || f.molde === 'sinmolde') return 'no';
-  return (Number(f.existencia)||0) > 0 ? 'listo' : 'encargo';
+const VACIAS = new Set(['y','o','de','del','la','el','los','las','un','una','con','en','para','al','a','e']);
+
+function variantes(p){
+  const v = new Set([p]);
+  if (p.length > 4 && p.endsWith('es')) v.add(p.slice(0,-2));
+  else if (p.length > 3 && p.endsWith('s')) v.add(p.slice(0,-1));
+  else v.add(p + (/[aeiou]$/.test(p) ? 's' : 'es'));
+  v.forEach(b=>{
+    const m = b.match(/^(.+)(it[ao])s?$/);
+    if (m && m[1].length > 2) v.add(m[1] + (m[2]==='ita' ? 'a' : 'o'));
+    else if (/[ao]$/.test(b) && b.length > 3){
+      const r = b.slice(0,-1);
+      v.add((r.endsWith('i') ? r.slice(0,-1) : r) + (b.endsWith('a') ? 'ita' : 'ito'));
+    }
+  });
+  return v;
 }
-function etiqueta(f){
-  const e = estado(f);
-  if (e === 'listo') return 'Listas hoy';
+
+function clavesDe(texto){
+  const s = new Set();
+  String(texto||'').split(/\s+/).forEach(t=>{
+    const n = limpio(t).replace(/[^a-z0-9]/g,'');
+    if (n && !VACIAS.has(n)) variantes(n).forEach(v=>s.add(v));
+  });
+  return [...s].join(', ');
+}
+
+const moldeDe = p => moldes.find(m=>m.id === p.idMolde) || {};
+const piezasDe = id => piezas.filter(p=>p.idMolde === id).sort((a,b)=>(a.numero||0)-(b.numero||0));
+const sinNombre = p => !String(p.nombre||'').trim();
+const umbral = p => (p.minimo === 0 || Number(p.minimo)) ? Number(p.minimo) : 3;
+
+/* Faltan piezas por registrar si el molde declara más cavidades que las que tiene. */
+const faltan = m => Math.max(0, (Number(m.cavidades)||0) - piezasDe(m.id).length);
+
+function estado(p){
+  const m = moldeDe(p);
+  if (m.estado === 'danado' || m.estado === 'sinmolde') return 'no';
+  if (sinNombre(p)) return 'vacio';
+  return (Number(p.existencia)||0) > 0 ? 'listo' : 'encargo';
+}
+
+function etiqueta(p){
+  const e = estado(p);
+  if (e === 'listo') return 'En bodega';
   if (e === 'encargo') return 'Por encargo';
-  return f.molde === 'danado' ? 'Molde dañado' : 'No la manejo';
+  if (e === 'vacio') return 'Sin nombre';
+  return moldeDe(p).estado === 'danado' ? 'Molde dañado' : 'No la manejo';
 }
+
 function brindis(msg){
   document.querySelectorAll('.brindis').forEach(b=>b.remove());
   const d = document.createElement('div');
@@ -260,7 +310,7 @@ function brindis(msg){
   app.appendChild(d); setTimeout(()=>d.remove(), 2800);
 }
 
-/* ══════════ puente con Google Sheets ══════════ */
+/* ══════════ puente con la hoja ══════════ */
 async function api(accion, datos){
   if (!config.url) throw new Error('Falta conectar la hoja');
   const r = await fetch(config.url, {
@@ -278,11 +328,15 @@ function marcaSync(clase, texto){
   $('#txtSync').textContent = texto;
 }
 
-/* Toda modificación entra a una cola y se envía en orden. Si no hay señal,
-   la cola espera en el celular; nada se pierde ni se revierte al sincronizar. */
+/* Toda modificación entra a una cola y se envía en orden. Sin señal, la cola
+   espera en el celular; nada se pierde ni se revierte al sincronizar. */
 function idsEnCola(){
   const s = new Set();
-  cola.forEach(op=>{ const id = op.datos && op.datos.id; if (id) s.add(String(id)); });
+  cola.forEach(op=>{
+    const d = op.datos || {};
+    if (d.id) s.add(String(d.id));
+    (d.piezas||[]).forEach(p=>{ if (p.id) s.add(String(p.id)); });
+  });
   return s;
 }
 
@@ -321,13 +375,16 @@ async function sincronizar(silencioso){
   sincronizando = true;
   try{
     const pendientes = cola.length;
-    const enviado = await drenar(silencioso);
-    if (!enviado) return;
+    if (!await drenar(silencioso)) return;
     marcaSync('trab','Sincronizando');
     const d = await api('leer');
-    figuras = d.figuras || [];
-    ventas  = d.ventas  || [];
-    await cache.set('figuras', figuras);
+    moldes    = d.moldes    || [];
+    piezas    = d.piezas    || [];
+    productos = d.productos || [];
+    ventas    = d.ventas    || [];
+    await cache.set('moldes', moldes);
+    await cache.set('piezas', piezas);
+    await cache.set('productos', productos);
     await cache.set('ventas', ventas);
     marcaSync('ok','Al día');
     if (!silencioso) brindis(pendientes ? `${pendientes} cambio(s) enviados a la hoja.` : 'Inventario al día.');
@@ -335,17 +392,16 @@ async function sincronizar(silencioso){
   } catch(err){
     marcaSync('mal','Sin conexión');
     if (!silencioso) brindis('No se pudo conectar: ' + err.message);
-  } finally {
-    sincronizando = false;
-  }
+  } finally { sincronizando = false; }
 }
 
-/* ══════════ arranque ══════════ */
 async function iniciar(){
-  config  = (await cache.get('config'))  || {url:'', clave:''};
-  figuras = (await cache.get('figuras')) || [];
-  ventas  = (await cache.get('ventas'))  || [];
-  cola    = (await cache.get('cola'))    || [];
+  config    = (await cache.get('config'))    || {url:'', clave:''};
+  moldes    = (await cache.get('moldes'))    || [];
+  piezas    = (await cache.get('piezas'))    || [];
+  productos = (await cache.get('productos')) || [];
+  ventas    = (await cache.get('ventas'))    || [];
+  cola      = (await cache.get('cola'))      || [];
   listo = true;
   marcaSync('', config.url ? 'Tocar para sincronizar' : 'Sin conectar');
   pintar();
@@ -353,20 +409,26 @@ async function iniciar(){
 }
 
 /* ══════════ respuesta para el cliente ══════════ */
-function redactar(f){
-  const e = estado(f);
-  const med = f.medidas ? ` Mide ${f.medidas}.` : '';
-  const pre = Number(f.precio) > 0 ? ` Valor: ${pesos(f.precio)} c/u.` : '';
+function precios(){
+  return productos.filter(p=>Number(p.precio) > 0)
+    .map(p=>`${p.nombre}: ${pesos(p.precio)}`).join('. ');
+}
+
+function redactar(p){
+  const m = moldeDe(p);
+  const e = estado(p);
+  const lista = precios();
+  const tarifa = lista ? ` ${lista}.` : '';
   if (e === 'listo'){
-    const n = Number(f.existencia)||0;
-    return `¡Hola! Sí 🙌 Tengo ${f.nombre} disponible: ${n} ${n===1?'unidad lista':'unidades listas'} para entrega inmediata.${pre}${med} ¿Cuántas necesitas?`;
+    const n = Number(p.existencia)||0;
+    return `¡Hola! Sí 🙌 Tengo ${p.nombre}: ${n} ${n===1?'unidad lista':'unidades listas'} para entrega inmediata.${tarifa} ¿Cuántas necesitas?`;
   }
   if (e === 'encargo'){
-    const d = Number(f.dias)||0;
-    const plazo = d>0 ? `te las elaboro en ${d} ${d===1?'día':'días'}.` : 'te las elaboro sobre pedido.';
-    return `¡Hola! Sí manejo ${f.nombre}. En este momento no tengo unidades listas, pero ${plazo}${pre}${med} ¿Cuántas necesitas y para qué fecha?`;
+    const d = Number(m.dias)||0;
+    const plazo = d>0 ? `te la elaboro en ${d} ${d===1?'día':'días'}.` : 'te la elaboro sobre pedido.';
+    return `¡Hola! Sí manejo ${p.nombre}. En este momento no tengo unidades listas, pero ${plazo}${tarifa} ¿Cuántas necesitas y para qué fecha?`;
   }
-  return `Por ahora no tengo disponible ${f.nombre}. Con gusto te muestro otras figuras que sí manejo y te pueden servir 🙂`;
+  return `Por ahora no tengo disponible ${p.nombre || 'esa figura'}. Con gusto te muestro otras que sí manejo 🙂`;
 }
 
 async function copiar(texto, boton){
@@ -386,95 +448,145 @@ async function copiar(texto, boton){
   } else if (!ok) brindis('Seleccione el texto y cópielo manualmente.');
 }
 
-/* ══════════ ventas ══════════ */
-function vendidasDesde(id, dias){
-  const corte = Date.now() - dias*86400000;
-  return ventas.filter(v => String(v.id)===String(id) && new Date(v.fecha).getTime() >= corte)
-               .reduce((s,v)=>s+(Number(v.cantidad)||0),0);
+/* ══════════ búsqueda ══════════ */
+function partes(q){
+  const t = limpio(q).split(/\s+/).filter(p=>p && !VACIAS.has(p) && !['algo','tienes','tiene'].includes(p));
+  return t.length ? t : limpio(q).split(/\s+/).filter(Boolean);
 }
 
-/* ══════════ filtros ══════════ */
-function coincide(f,q){
-  if (!q) return true;
-  const bolsa = limpio([f.codigo,f.nombre,f.categoria,f.claves,f.notas].join(' '));
-  const partes = q.split(/\s+/).filter(p=>p && !VACIAS.has(p) && p !== 'algo' && p !== 'tienes' && p !== 'tiene');
-  return (partes.length ? partes : q.split(/\s+/).filter(Boolean)).every(p=>bolsa.includes(p));
+/* La pieza se busca por lo suyo. Si se incluyeran las palabras del molde,
+   buscar "abeja" devolvería también Miel y Flor por ser del mismo molde. */
+function coincidePieza(p, ps){
+  if (!ps.length) return true;
+  const bolsa = limpio([p.nombre, p.claves, moldeDe(p).codigo].join(' '));
+  return ps.every(x=>bolsa.includes(x));
 }
+
+function coincideMolde(m, ps){
+  if (!ps.length) return true;
+  const suyas = piezasDe(m.id).map(p=>p.nombre + ' ' + p.claves).join(' ');
+  const bolsa = limpio([m.nombre, m.claves, m.codigo, m.categoria, m.notas, m.ubicacion, suyas].join(' '));
+  return ps.every(x=>bolsa.includes(x));
+}
+
 function visibles(){
-  const q = limpio(consulta).trim();
-  return figuras.filter(f=>{
-    if (!coincide(f,q)) return false;
-    if (filtro === 'todas') return true;
-    if (filtro === 'bajo') return estado(f)==='listo' && Number(f.existencia) <= umbral(f);
-    return estado(f) === filtro;
-  }).sort((a,b)=>{
-    const o = {listo:0, encargo:1, no:2};
+  const ps = partes(consulta);
+  if (filtro === 'moldes'){
+    return moldes.filter(m=>coincideMolde(m, ps))
+      .sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
+  }
+
+  const filtrar = lista => lista.filter(p=>{
+    if (filtro === 'listo') return estado(p) === 'listo';
+    if (filtro === 'sinnombre') return sinNombre(p);
+    if (filtro === 'bajo') return estado(p)==='listo' && Number(p.existencia) <= umbral(p);
+    return true;
+  });
+
+  let res = filtrar(piezas.filter(p=>coincidePieza(p, ps)));
+
+  /* Nada por nombre de pieza: quizá buscó el molde ("granja", "ABE-01").
+     Se muestran entonces las piezas de los moldes que sí coinciden. */
+  if (!res.length && ps.length){
+    const ids = new Set(moldes.filter(m=>coincideMolde(m, ps)).map(m=>m.id));
+    res = filtrar(piezas.filter(p=>ids.has(p.idMolde)));
+  }
+
+  return res.sort((a,b)=>{
+    const o = {listo:0, encargo:1, vacio:2, no:3};
     return (o[estado(a)]-o[estado(b)]) || (a.nombre||'').localeCompare(b.nombre||'','es');
   });
 }
 
 /* ══════════ pintado ══════════ */
+function miniatura(m){
+  return `<div class="foto">${m.foto
+    ? `<img src="${esc(m.foto)}" alt="" loading="lazy" style="transform:rotate(${Number(m.giro)||0}deg)">`
+    : 'SIN FOTO'}</div>`;
+}
+
 function pintar(){
   const lista = $('#lista'), panel = $('#panel'), conteo = $('#conteo');
   if (!listo){ lista.innerHTML = '<div class="vacio"><p>Abriendo el inventario…</p></div>'; return; }
 
   const res = visibles();
+  const pend = idsEnCola();
   panel.innerHTML = '';
-  if (consulta.trim() && res.length){
-    const f = res[0], texto = redactar(f);
+
+  if (consulta.trim() && filtro !== 'moldes' && res.length){
+    const p = res[0], texto = redactar(p);
+    const m = moldeDe(p);
     const caja = document.createElement('div');
     caja.className = 'respuesta';
-    caja.innerHTML = `<span class="eyebrow">Respuesta lista · ${esc(f.codigo)}</span><p></p>
-                      <button class="copiar">Copiar para WhatsApp</button>`;
+    caja.innerHTML = `<span class="eyebrow">Respuesta lista · ${esc(m.codigo||'')} · pieza ${esc(p.numero||'')}</span>
+                      <p></p><button class="copiar">Copiar para WhatsApp</button>`;
     caja.querySelector('p').textContent = texto;
     caja.querySelector('button').addEventListener('click', ev=>copiar(texto, ev.currentTarget));
     panel.appendChild(caja);
   }
 
-  if (!figuras.length){
+  if (!moldes.length){
     conteo.textContent = '';
     lista.innerHTML = `<div class="vacio">
-        <h2>${config.url ? 'Aún no hay figuras' : 'Conecte su hoja de cálculo'}</h2>
+        <h2>${config.url ? 'Aún no hay moldes' : 'Conecte su hoja de cálculo'}</h2>
         <p>${config.url
-          ? 'Registre su primera figura de yeso. Con 10 ya empieza a responderle al cliente sin ir hasta la bodega.'
-          : 'Abra el menú ··· y pegue la dirección de su aplicación web de Apps Script. También puede registrar figuras ahora y sincronizarlas después.'}</p>
-        <button class="btn btn-primario" id="primera">Registrar la primera</button></div>`;
-    $('#primera').addEventListener('click', ()=>abrirFicha(null));
+          ? 'Registre su primer molde y las piezas que salen de él. También puede importarlos desde Drive con el menú ···'
+          : 'Abra el menú ··· y pegue la dirección de su aplicación web de Apps Script.'}</p>
+        <button class="btn btn-primario" id="primero">Registrar el primero</button></div>`;
+    $('#primero').addEventListener('click', ()=>abrirMolde(null));
     return;
   }
 
-  const piezas = figuras.filter(f=>estado(f)==='listo').reduce((s,f)=>s+(Number(f.existencia)||0),0);
-  conteo.textContent = `${res.length} de ${figuras.length} figuras · ${piezas} piezas en existencia`;
+  const enBodega = piezas.filter(p=>estado(p)==='listo').reduce((s,p)=>s+(Number(p.existencia)||0),0);
+  const huecos = moldes.reduce((s,m)=>s+faltan(m), 0);
+  conteo.textContent = filtro === 'moldes'
+    ? `${res.length} de ${moldes.length} moldes${huecos?` · ${huecos} piezas por registrar`:''}`
+    : `${res.length} de ${piezas.length} piezas · ${enBodega} en bodega`;
 
   if (!res.length){
     lista.innerHTML = `<div class="vacio"><h2>Nada con esa palabra</h2>
-      <p>Si el cliente la pide así y usted sí la maneja, abra la figura y agregue esa palabra a los sinónimos. La próxima vez la encuentra.</p></div>`;
+      <p>Si el cliente la pide así y usted sí la maneja, abra la pieza y agregue esa palabra a los sinónimos.</p></div>`;
     return;
   }
 
   lista.innerHTML = '';
-  const pend = idsEnCola();
-  res.forEach(f=>{
-    const e = estado(f);
+  res.forEach(x=>{
     const b = document.createElement('button');
-    b.className = 'ficha' + (pend.has(String(f.id)) ? ' pend' : '');
-    b.innerHTML = `
-      <div class="foto" ${f.foto?`style="background-image:url('${esc(f.foto)}')"`:''}>${f.foto?'':'SIN FOTO'}</div>
-      <div class="info">
-        <div class="cod">${esc(f.codigo) || '—'}</div>
-        <div class="nom"></div>
-        <div class="pie"><span class="sello ${e}">${etiqueta(f)}</span>
-        ${Number(f.precio)>0?`<span class="precio">${pesos(f.precio)}</span>`:''}</div>
-      </div>
-      <div class="cant"><b>${Number(f.existencia)||0}</b><span>EN STOCK</span></div>`;
-    b.querySelector('.nom').textContent = f.nombre || 'Sin nombre';
-    b.addEventListener('click', ()=>abrirFicha(f.id));
+    if (filtro === 'moldes'){
+      const n = piezasDe(x.id).length, f = faltan(x);
+      b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
+      b.innerHTML = `${miniatura(x)}
+        <div class="info">
+          <div class="cod">${esc(x.codigo||'—')}${x.ubicacion?' · '+esc(x.ubicacion):''}</div>
+          <div class="nom"></div>
+          <div class="pie">
+            ${x.estado==='bueno' ? '' : `<span class="sello no">${x.estado==='danado'?'Molde dañado':'No lo tengo'}</span>`}
+            ${f ? `<span class="sello vacio">Faltan ${f}</span>` : ''}
+          </div>
+        </div>
+        <div class="cant"><b>${n}</b><span>PIEZAS</span></div>`;
+      b.querySelector('.nom').textContent = x.nombre || 'Sin nombre';
+      b.addEventListener('click', ()=>abrirMolde(x.id));
+    } else {
+      const m = moldeDe(x);
+      b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
+      b.innerHTML = `${miniatura(m)}
+        <div class="info">
+          <div class="cod">${esc(m.codigo||'—')} · pieza ${esc(x.numero||'?')}</div>
+          <div class="nom${sinNombre(x)?' gris':''}"></div>
+          <div class="pie"><span class="sello ${estado(x)}">${etiqueta(x)}</span></div>
+        </div>
+        <div class="cant"><b>${Number(x.existencia)||0}</b><span>EN BODEGA</span></div>`;
+      b.querySelector('.nom').textContent = x.nombre || 'Sin nombre — por completar';
+      b.addEventListener('click', ()=>abrirPieza(x.id));
+    }
     lista.appendChild(b);
   });
 }
 
 /* ══════════ modales ══════════ */
 function cerrar(){ document.querySelectorAll('.capa').forEach(c=>c.remove()); }
+
 function abrir(html){
   cerrar();
   const capa = document.createElement('div');
@@ -487,103 +599,300 @@ function abrir(html){
   return capa;
 }
 
-async function persistir(figura, extra){
-  const i = figuras.findIndex(x=>x.id===figura.id);
-  if (i>=0) figuras[i] = figura; else figuras.push(figura);
-  await cache.set('figuras', figuras);
+let contador = 0;
+const nuevoId = pre => pre + Date.now() + '-' + (contador++);
+
+function moldeNuevo(){
+  return {id:nuevoId('m'), codigo:'', nombre:'', categoria:'', claves:'', medidas:'', cavidades:0,
+          dias:2, estado:'bueno', ubicacion:'', notas:'', foto:'', giro:0};
+}
+
+function piezaNueva(idMolde, numero){
+  return {id:nuevoId('z'), idMolde:idMolde, numero:numero, nombre:'', claves:'', existencia:0, minimo:3};
+}
+
+async function guardarLocal(){
+  await cache.set('moldes', moldes);
+  await cache.set('piezas', piezas);
+  await cache.set('productos', productos);
   pintar();
-
-  /* La foto viaja dentro de la operación encolada: si no hay señal en el
-     momento, sube igual cuando vuelva la conexión. */
-  const enviado = await encolar('guardar', Object.assign({}, figura, extra||{}));
-  if (enviado && extra && extra.fotoBase64) await sincronizar(true);
-  else if (!enviado && config.url) brindis('Guardado en el celular. Se enviará a la hoja al reconectar.');
-  return enviado;
 }
 
-let contadorId = 0;
-function figuraNueva(){
-  return {id:'f'+Date.now()+'-'+(contadorId++), codigo:'', nombre:'', categoria:'', claves:'',
-          medidas:'', existencia:0, minimo:3, precio:0, dias:2, molde:'bueno', ubicacion:'', notas:'', foto:''};
-}
+/* ══════════ molde ══════════ */
+function abrirMolde(id){
+  const nuevo = !id;
+  const m = nuevo ? moldeNuevo() : Object.assign({}, moldes.find(x=>x.id===id));
+  const suyas = nuevo ? [] : piezasDe(m.id);
+  const f = nuevo ? 0 : faltan(m);
 
-/* ══════════ leer los nombres de archivo ══════════
-   Las fotos vienen nombradas como "ABEJA MIEL FLOR NIÑA.jpg".
-   De ahí salen el nombre, las palabras de búsqueda y el público. */
+  const capa = abrir(`
+    <div class="hoja-top"><h2>${nuevo?'Nuevo molde':'Molde'}</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
 
-const CATEGORIAS_CLAVE = [
-  ['Animales', ['abeja','ardilla','conejo','gato','leon','leona','dinosaurio','girafa','jirafa','flamingo','tucan',
-                'pelicano','oso','mariposa','pollito','perro','vaca','elefante','buho','pez','tortuga','caballo',
-                'oveja','pato','rana','koala','panda','zorro','ciervo','erizo','cerdo','raton','unicornio','dragon','sirena']],
-  ['Flores y hojas', ['flor','girasol','rosa','hoja','margarita','tulipan','hongo','planta','cactus']],
-  ['Transporte', ['carro','moto','bus','helicoptero','avion','tren','barco','camion','bicicleta','tractor']],
-  ['Espacio y cielo', ['astronauta','estrella','luna','cohete','planeta','nube','sol','arcoiris']],
-  ['Comida', ['dona','miel','fruta','helado','torta','cupcake','pastel','galleta','pizza','taza','cafe']],
-  ['Corazones y amor', ['corazon','amor','beso','labio']],
-  ['Casas', ['casita','casa','castillo','iglesia']],
-  ['Letras y números', ['letra','numero','abecedario','inicial']],
-  ['Bebé', ['bebe','biberon','chupo','sonajero','patuco']],
-  ['Fechas especiales', ['navidad','halloween','calabaza','arbol','pascua','huevo']],
-];
+    <div class="foto-caja">
+      <div class="foto-prev" id="prev">${m.foto ? '<img alt="">' : 'SIN FOTO'}</div>
+      <div style="flex:1">
+        <button class="btn btn-borde" id="btnFoto" style="width:100%">Tomar o subir foto</button>
+        <div class="girar">
+          <button type="button" id="girarI" aria-label="Girar a la izquierda">&#8634;</button>
+          <button type="button" id="girarD" aria-label="Girar a la derecha">&#8635;</button>
+        </div>
+        <input type="file" id="archFoto" accept="image/*" style="display:none">
+        <button class="btn btn-peligro" id="quitaFoto" style="width:100%;margin-top:7px;${m.foto?'':'display:none'}">Quitar foto</button>
+      </div>
+    </div>
 
-const VACIAS = new Set(['y','o','de','del','la','el','los','las','un','una','con','en','para','al','a','e']);
+    <div class="campo"><label for="m-nom">Nombre del molde</label>
+      <input id="m-nom" placeholder="Abeja Miel Flor">
+      <span class="pista">Cómo llama usted a la plancha completa. Las piezas se nombran abajo.</span></div>
 
-function variantes(p){
-  const v = new Set([p]);
-  if (p.length > 4 && p.endsWith('es')) v.add(p.slice(0,-2));
-  else if (p.length > 3 && p.endsWith('s')) v.add(p.slice(0,-1));
-  else v.add(p + (/[aeiou]$/.test(p) ? 's' : 'es'));   // flor→flores, casa→casas
+    <div class="dos">
+      <div class="campo"><label for="m-cod">Código</label><input id="m-cod" placeholder="ABE-01"></div>
+      <div class="campo"><label for="m-cat">Categoría</label>
+        <input id="m-cat" placeholder="Animales" list="cats"><datalist id="cats"></datalist></div>
+    </div>
 
-  /* La gente pide en diminutivo: "osito", "conejito", "casita". */
-  v.forEach(b=>{
-    const m = b.match(/^(.+)(it[ao])s?$/);
-    if (m && m[1].length > 2) v.add(m[1] + (m[2] === 'ita' ? 'a' : 'o'));
-    else if (/[ao]$/.test(b) && b.length > 3){
-      const r = b.slice(0,-1);
-      v.add((r.endsWith('i') ? r.slice(0,-1) : r) + (b.endsWith('a') ? 'ita' : 'ito'));
-    }
-  });
-  return v;
-}
+    <div class="dos">
+      <div class="campo"><label for="m-cav">Cavidades del molde</label>
+        <input id="m-cav" type="number" min="0" inputmode="numeric">
+        <span class="pista">Cuántas figuras trae la plancha en total.</span></div>
+      <div class="campo"><label for="m-dia">Días para producir</label>
+        <input id="m-dia" type="number" min="0" inputmode="numeric"></div>
+    </div>
 
-function adivinarCategoria(palabras){
-  let mejor = 'Sin clasificar', max = 0;
-  CATEGORIAS_CLAVE.forEach(([cat, claves])=>{
-    const n = palabras.filter(p=>claves.some(c=>p===c || p===c+'s' || p===c+'es')).length;
-    if (n > max){ max = n; mejor = cat; }
-  });
-  return mejor;
-}
+    ${f ? `<div class="aviso">Este molde declara <b>${Number(m.cavidades)}</b> cavidades y solo tiene
+            <b>${suyas.length}</b> piezas registradas. Faltan <b>${f}</b> por nombrar.</div>` : ''}
 
-function analizarNombre(nombreArchivo){
-  const base = nombreArchivo.replace(/\.[^.]+$/,'').replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();
-  const publico = new Set(), resto = [];
+    ${nuevo ? '<span class="pista" style="margin:0 0 16px">Guarde el molde y después agregue sus piezas.</span>' : `
+    <div class="campo"><label>Piezas de este molde</label>
+      <div class="lista-piezas" id="piezas"></div>
+      <button class="btn btn-borde" id="masPieza" style="width:100%;margin-top:9px">+ Agregar pieza</button>
+      <span class="pista">El número corresponde a la posición en la foto. Toque una pieza para nombrarla o contarla.</span></div>`}
 
-  base.split(/[\/,]|\s+/).filter(Boolean).forEach(t=>{
-    const n = limpio(t).replace(/[^a-z0-9]/g,'');
-    if (!n) return;
-    if (/^nin[ao]s?$/.test(n)) publico.add(n[3] === 'a' ? 'niña' : 'niño');
-    else resto.push({crudo:t, norm:n});
-  });
+    <div class="dos">
+      <div class="campo"><label for="m-est">Estado del molde</label>
+        <select id="m-est">
+          <option value="bueno">Bueno — puedo producir</option>
+          <option value="danado">Dañado — no puedo producir</option>
+          <option value="sinmolde">Ya no lo tengo</option>
+        </select></div>
+      <div class="campo"><label for="m-ubi">Dónde está</label><input id="m-ubi" placeholder="Caja 1 · Estante A"></div>
+    </div>
 
-  const claves = new Set();
-  resto.forEach(x=>{ if (!VACIAS.has(x.norm)) variantes(x.norm).forEach(v=>claves.add(v)); });
-  publico.forEach(p=>{ claves.add(p); claves.add(limpio(p)); });
+    <div class="campo"><label for="m-med">Medidas</label><input id="m-med" placeholder="18 x 12 cm"></div>
 
-  return {
-    nombre: resto.map(x=>x.crudo.charAt(0).toUpperCase() + x.crudo.slice(1).toLowerCase()).join(' ') || base,
-    categoria: adivinarCategoria(resto.map(x=>x.norm)),
-    claves: [...claves].join(', '),
-    publico: [...publico].join(' y '),
+    <div class="campo"><label for="m-cla">Palabras de búsqueda del molde</label>
+      <textarea id="m-cla" placeholder="animales, granja, surtido"></textarea>
+      <span class="pista">Además de las de cada pieza. Sepárelas con comas.</span></div>
+
+    <div class="campo"><label for="m-not">Notas</label><textarea id="m-not" placeholder="Para niña"></textarea></div>
+
+    <div class="acciones">
+      <button class="btn btn-primario" id="guardar">Guardar</button>
+      ${nuevo?'':'<button class="btn btn-peligro" id="borrar">Eliminar</button>'}
+    </div>`);
+
+  const h = capa.querySelector('.hoja');
+  const campos = {'#m-nom':'nombre','#m-cod':'codigo','#m-cat':'categoria','#m-cav':'cavidades',
+                  '#m-dia':'dias','#m-est':'estado','#m-ubi':'ubicacion','#m-med':'medidas',
+                  '#m-cla':'claves','#m-not':'notas'};
+  Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = m[k] ?? ''; });
+
+  h.querySelector('#cats').innerHTML =
+    [...new Set(moldes.map(x=>x.categoria).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('');
+
+  /* foto y giro */
+  const prev = h.querySelector('#prev');
+  let fotoBase64 = null, quitarFoto = false, giro = Number(m.giro) || 0;
+
+  const pintarPrev = fuente => {
+    if (!fuente){ prev.innerHTML = 'SIN FOTO'; return; }
+    let img = prev.querySelector('img');
+    if (!img){ prev.innerHTML = ''; img = document.createElement('img'); img.alt = ''; prev.appendChild(img); }
+    img.src = fuente;
+    img.style.transform = `rotate(${giro}deg)`;
   };
+  pintarPrev(m.foto);
+
+  const rotar = g => {
+    const img = prev.querySelector('img');
+    if (!img){ brindis('Primero suba una foto.'); return; }
+    giro = (giro + g + 360) % 360;
+    img.style.transform = `rotate(${giro}deg)`;
+  };
+  h.querySelector('#girarI').addEventListener('click', ()=>rotar(-90));
+  h.querySelector('#girarD').addEventListener('click', ()=>rotar(90));
+
+  h.querySelector('#btnFoto').addEventListener('click', ()=>h.querySelector('#archFoto').click());
+  h.querySelector('#archFoto').addEventListener('change', ev=>{
+    const arch = ev.target.files && ev.target.files[0];
+    if (!arch) return;
+    comprimir(arch, 700, 0.72).then(d=>{
+      fotoBase64 = d; quitarFoto = false;
+      pintarPrev(d);
+      h.querySelector('#quitaFoto').style.display = '';
+    }).catch(()=>brindis('No se pudo leer esa imagen.'));
+  });
+
+  h.querySelector('#quitaFoto').addEventListener('click', ()=>{
+    fotoBase64 = null; quitarFoto = true; giro = 0;
+    prev.innerHTML = 'SIN FOTO';
+    h.querySelector('#quitaFoto').style.display = 'none';
+  });
+
+  /* piezas */
+  const cajaPiezas = h.querySelector('#piezas');
+  if (cajaPiezas){
+    const pintarPiezas = ()=>{
+      const actuales = piezasDe(m.id);
+      cajaPiezas.innerHTML = '';
+      if (!actuales.length){
+        cajaPiezas.innerHTML = '<div style="padding:14px;color:var(--tiza);font-size:13.5px">Sin piezas registradas.</div>';
+      }
+      actuales.forEach(p=>{
+        const b = document.createElement('button');
+        b.className = 'pieza';
+        b.innerHTML = `<span class="n${sinNombre(p)?' sin':''}">${esc(p.numero||'?')}</span>
+                       <span class="t"></span>
+                       <span class="e">${Number(p.existencia)||0}</span>`;
+        const t = b.querySelector('.t');
+        if (sinNombre(p)) t.innerHTML = '<i>Sin nombre — por completar</i>';
+        else t.textContent = p.nombre;
+        b.addEventListener('click', ()=>abrirPieza(p.id));
+        cajaPiezas.appendChild(b);
+      });
+    };
+    pintarPiezas();
+
+    h.querySelector('#masPieza').addEventListener('click', async ()=>{
+      const actuales = piezasDe(m.id);
+      const num = actuales.reduce((s,p)=>Math.max(s, Number(p.numero)||0), 0) + 1;
+      const nueva = piezaNueva(m.id, num);
+      piezas.push(nueva);
+      await guardarLocal();
+      await encolar('guardarPieza', nueva);
+      abrirPieza(nueva.id);
+    });
+  }
+
+  h.querySelector('#guardar').addEventListener('click', async ()=>{
+    Object.entries(campos).forEach(([s,k])=>{ m[k] = h.querySelector(s).value; });
+    if (!(m.nombre||'').trim()){ brindis('Escriba el nombre del molde.'); return; }
+    ['cavidades','dias'].forEach(k=>{ m[k] = Number(m[k])||0; });
+    m.giro = giro;
+    if (!m.codigo) m.codigo = (limpio(m.nombre).replace(/[^a-z0-9]/g,'').slice(0,3).toUpperCase()||'MOL') + '-01';
+    if (quitarFoto) m.foto = '';
+
+    const i = moldes.findIndex(x=>x.id===m.id);
+    if (i>=0) moldes[i] = m; else moldes.push(m);
+    await guardarLocal();
+    cerrar();
+
+    const extra = fotoBase64 ? {fotoBase64:fotoBase64} : (quitarFoto ? {quitarFoto:true} : null);
+    const ok = await encolar('guardarMolde', Object.assign({}, m, extra||{}));
+    if (ok && fotoBase64) await sincronizar(true);
+    brindis(nuevo ? 'Molde registrado.' : 'Cambios guardados.');
+  });
+
+  const bb = h.querySelector('#borrar');
+  if (bb) bb.addEventListener('click', ()=>{
+    const c2 = abrir(`<div class="hoja-top"><h2>¿Eliminar este molde?</h2><button class="cerrar">×</button></div>
+      <p style="font-size:14.5px;line-height:1.6;color:var(--pizarra-2);margin:0">
+        Se borra el molde y <b>todas sus piezas</b>, junto con la foto. No se puede deshacer.</p>
+      <div class="acciones"><button class="btn btn-borde" id="no">Cancelar</button>
+      <button class="btn btn-peligro" id="si">Sí, eliminar</button></div>`);
+    c2.querySelector('#no').addEventListener('click', cerrar);
+    c2.querySelector('#si').addEventListener('click', async ()=>{
+      moldes = moldes.filter(x=>x.id!==m.id);
+      piezas = piezas.filter(p=>p.idMolde!==m.id);
+      await guardarLocal();
+      cerrar();
+      await encolar('eliminarMolde', {id:m.id});
+      brindis('Molde eliminado.');
+    });
+  });
 }
 
-function codigoDe(nombre, usados){
-  const raiz = (limpio(nombre).replace(/[^a-z0-9]/g,'').slice(0,3).toUpperCase()) || 'FIG';
-  let i = 1, c;
-  do { c = raiz + '-' + String(i).padStart(2,'0'); i++; } while (usados.has(c));
-  usados.add(c);
-  return c;
+/* ══════════ pieza ══════════ */
+function abrirPieza(id){
+  const p = Object.assign({}, piezas.find(x=>x.id===id));
+  if (!p.id) return;
+  const m = moldeDe(p);
+
+  const capa = abrir(`
+    <div class="hoja-top"><h2>Pieza ${esc(p.numero||'')}</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+
+    <button class="ficha" id="verMolde" style="margin-bottom:16px">
+      ${miniatura(m)}
+      <div class="info">
+        <div class="cod">${esc(m.codigo||'')}</div>
+        <div class="nom" style="font-size:15px;margin-bottom:2px"></div>
+        <div class="pista" style="margin:0">Toque para abrir el molde</div>
+      </div>
+    </button>
+
+    <div class="campo"><label for="p-nom">Nombre de la pieza</label>
+      <input id="p-nom" placeholder="Abeja">
+      <span class="pista">Déjelo vacío si todavía no sabe cuál es: queda marcada como pendiente.</span></div>
+
+    <div class="campo"><label for="p-cla">Cómo la pide el cliente</label>
+      <textarea id="p-cla" placeholder="abeja, abejita, abejas"></textarea>
+      <span class="pista">Se llenan solas al escribir el nombre, pero puede agregar más.</span></div>
+
+    <div class="campo"><label>Piezas listas en bodega</label>
+      <div class="contador">
+        <button type="button" id="menos" aria-label="Restar una">−</button>
+        <input id="p-exi" type="number" min="0" inputmode="numeric">
+        <button type="button" id="mas" aria-label="Sumar una">+</button>
+      </div></div>
+
+    <div class="dos">
+      <div class="campo"><label for="p-num">Número en el molde</label>
+        <input id="p-num" type="number" min="1" inputmode="numeric"></div>
+      <div class="campo"><label for="p-min">Avisar cuando queden</label>
+        <input id="p-min" type="number" min="0" inputmode="numeric"></div>
+    </div>
+
+    <div class="acciones">
+      <button class="btn btn-primario" id="guardar">Guardar</button>
+      <button class="btn btn-peligro" id="borrar">Eliminar</button>
+    </div>`);
+
+  const h = capa.querySelector('.hoja');
+  h.querySelector('#verMolde .nom').textContent = m.nombre || 'Molde sin nombre';
+  h.querySelector('#verMolde').addEventListener('click', ()=>abrirMolde(m.id));
+
+  const campos = {'#p-nom':'nombre','#p-cla':'claves','#p-exi':'existencia','#p-num':'numero','#p-min':'minimo'};
+  Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = p[k] ?? ''; });
+
+  const nom = h.querySelector('#p-nom'), cla = h.querySelector('#p-cla');
+  let clavesTocadas = !!String(p.claves||'').trim();
+  cla.addEventListener('input', ()=>{ clavesTocadas = true; });
+  nom.addEventListener('input', ()=>{ if (!clavesTocadas) cla.value = clavesDe(nom.value); });
+
+  const exi = h.querySelector('#p-exi');
+  h.querySelector('#mas').addEventListener('click', ()=>{ exi.value = (Number(exi.value)||0)+1; });
+  h.querySelector('#menos').addEventListener('click', ()=>{ exi.value = Math.max(0,(Number(exi.value)||0)-1); });
+
+  h.querySelector('#guardar').addEventListener('click', async ()=>{
+    Object.entries(campos).forEach(([s,k])=>{ p[k] = h.querySelector(s).value; });
+    ['existencia','numero','minimo'].forEach(k=>{ p[k] = Number(p[k])||0; });
+    if (!String(p.claves||'').trim() && p.nombre) p.claves = clavesDe(p.nombre);
+
+    const i = piezas.findIndex(x=>x.id===p.id);
+    if (i>=0) piezas[i] = p; else piezas.push(p);
+    await guardarLocal();
+    cerrar();
+    await encolar('guardarPieza', p);
+    brindis('Pieza guardada.');
+  });
+
+  h.querySelector('#borrar').addEventListener('click', async ()=>{
+    piezas = piezas.filter(x=>x.id!==p.id);
+    await guardarLocal();
+    cerrar();
+    await encolar('eliminarPieza', {id:p.id});
+    brindis('Pieza eliminada.');
+  });
 }
 
 function comprimir(archivo, max, calidad){
@@ -594,9 +903,9 @@ function comprimir(archivo, max, calidad){
       const img = new Image();
       img.onerror = rej;
       img.onload = ()=>{
-        const esc = Math.min(1, max/Math.max(img.width, img.height));
+        const e = Math.min(1, max/Math.max(img.width, img.height));
         const cv = document.createElement('canvas');
-        cv.width = Math.round(img.width*esc); cv.height = Math.round(img.height*esc);
+        cv.width = Math.round(img.width*e); cv.height = Math.round(img.height*e);
         cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
         res(cv.toDataURL('image/jpeg', calidad));
       };
@@ -606,302 +915,200 @@ function comprimir(archivo, max, calidad){
   });
 }
 
-function abrirImportador(){
-  const conFotos = !!config.url;
+/* ══════════ venta ══════════ */
+function abrirVenta(){
+  if (!productos.length){ brindis('Primero registre sus productos y precios.'); return; }
+  const escogidas = [];
+
   const capa = abrir(`
-    <div class="hoja-top"><h2>Importar desde las fotos</h2><button class="cerrar">×</button></div>
-    <div class="aviso">
-      Se leen los nombres de sus archivos. <b>ABEJA MIEL FLOR NIÑA.jpg</b> se convierte en una
-      figura con esas cuatro palabras de búsqueda ya cargadas.
-      ${conFotos ? '' : '<br><br>Como todavía no ha conectado su hoja, se importan los nombres <b>sin las fotos</b>. Las fotos las sube después y no pierde este trabajo.'}
+    <div class="hoja-top"><h2>Registrar venta</h2><button class="cerrar">×</button></div>
+
+    <div class="campo"><label for="v-pro">Qué vendió</label>
+      <select id="v-pro">${productos.map(p=>`<option value="${esc(p.id)}">${esc(p.nombre)} · ${pesos(p.precio)}</option>`).join('')}</select>
+      <span class="pista" id="v-hint"></span></div>
+
+    <div class="campo"><label>Piezas que salieron</label>
+      <input id="v-buscar" placeholder="Escriba para buscar una pieza" autocomplete="off">
+      <div id="v-res" style="max-height:26vh;overflow-y:auto;margin-top:8px"></div></div>
+
+    <div class="campo"><label>Escogidas</label>
+      <div class="lista-piezas" id="v-sel"></div></div>
+
+    <div class="dos">
+      <div class="campo"><label for="v-tot">Total cobrado</label>
+        <input id="v-tot" type="number" min="0" inputmode="numeric"></div>
+      <div class="campo"><label for="v-cli">Cliente (opcional)</label><input id="v-cli"></div>
     </div>
-    <button class="btn btn-borde" id="elegir" style="width:100%">Elegir las fotos</button>
-    <input type="file" id="archivos" accept="image/*" multiple style="display:none">
-    <div id="previa"></div>`);
+    <div class="campo"><label for="v-not">Nota (opcional)</label><input id="v-not"></div>
+
+    <div class="acciones"><button class="btn btn-verde" id="v-ok">Registrar y descontar</button></div>`);
 
   const h = capa.querySelector('.hoja');
-  h.querySelector('#elegir').addEventListener('click', ()=>h.querySelector('#archivos').click());
+  const sel = h.querySelector('#v-pro'), hint = h.querySelector('#v-hint'), tot = h.querySelector('#v-tot');
 
-  h.querySelector('#archivos').addEventListener('change', ev=>{
-    const archivos = [...(ev.target.files||[])];
-    if (!archivos.length) return;
+  const productoActual = ()=>productos.find(x=>x.id === sel.value) || productos[0];
+  const refrescarProducto = ()=>{
+    const pr = productoActual();
+    tot.value = Number(pr.precio)||0;
+    const n = Number(pr.piezas)||0;
+    hint.textContent = n ? `Este producto lleva ${n} piezas.` : 'La cantidad de piezas es libre.';
+  };
+  sel.addEventListener('change', refrescarProducto);
+  refrescarProducto();
 
-    const usados = new Set(figuras.map(f=>f.codigo).filter(Boolean));
-    const yaHay = new Set(figuras.map(f=>limpio(f.nombre).replace(/\s+/g,' ').trim()).filter(Boolean));
-    const previa = archivos.map(a=>{
-      const d = analizarNombre(a.name);
-      const repetida = yaHay.has(limpio(d.nombre).replace(/\s+/g,' ').trim());
-      return Object.assign({archivo:a, codigo:codigoDe(d.nombre, usados), incluir:!repetida, repetida:repetida}, d);
+  const pintarSel = ()=>{
+    const caja = h.querySelector('#v-sel');
+    caja.innerHTML = escogidas.length ? '' :
+      '<div style="padding:13px;color:var(--tiza);font-size:13.5px">Ninguna todavía.</div>';
+    escogidas.forEach((e, i)=>{
+      const fila = document.createElement('div');
+      fila.className = 'pieza';
+      fila.innerHTML = `<span class="n">${esc(e.cantidad)}</span><span class="t"></span>
+                        <button class="e" style="border:none;background:none;color:var(--alerta);font-size:18px">×</button>`;
+      fila.querySelector('.t').textContent = e.nombre;
+      fila.querySelector('button').addEventListener('click', ()=>{ escogidas.splice(i,1); pintarSel(); });
+      caja.appendChild(fila);
     });
-    const nuevas = previa.filter(p=>!p.repetida).length;
-    const repes  = previa.length - nuevas;
+  };
+  pintarSel();
 
-    const cont = h.querySelector('#previa');
-    cont.innerHTML = `
-      <div class="campo" style="margin-top:16px">
-        <label>${previa.length} fotos leídas · ${nuevas} nuevas${repes?` · ${repes} ya registradas`:''}</label>
-        ${repes?`<span class="pista" style="margin:0 0 7px">Las que ya tiene aparecen desmarcadas para no duplicarlas. Nada de lo que ya registró se modifica.</span>`:''}
-        <div id="filas" style="max-height:46vh;overflow-y:auto;border:1px solid var(--linea);border-radius:3px;background:#fff"></div>
-      </div>
-      <div id="avance" class="pista" style="margin-bottom:10px"></div>
-      <div class="acciones" style="margin-top:0">
-        <button class="btn btn-primario" id="importar">Importar ${nuevas}</button>
-      </div>`;
+  const buscar = h.querySelector('#v-buscar'), res = h.querySelector('#v-res');
+  buscar.addEventListener('input', ()=>{
+    const ps = partes(buscar.value);
+    res.innerHTML = '';
+    if (!ps.length) return;
+    piezas.filter(p=>!sinNombre(p) && coincidePieza(p, ps)).slice(0, 12).forEach(p=>{
+      const m = moldeDe(p);
+      const b = document.createElement('button');
+      b.className = 'pieza';
+      b.style.background = '#fff';
+      b.innerHTML = `<span class="n">${esc(p.numero||'?')}</span><span class="t"></span>
+                     <span class="e">${Number(p.existencia)||0}</span>`;
+      b.querySelector('.t').textContent = `${p.nombre} · ${m.codigo||''}`;
+      b.addEventListener('click', ()=>{
+        const ya = escogidas.find(e=>e.id===p.id);
+        if (ya) ya.cantidad++;
+        else escogidas.push({id:p.id, nombre:p.nombre, cantidad:1});
+        buscar.value = ''; res.innerHTML = '';
+        pintarSel();
+      });
+      res.appendChild(b);
+    });
+  });
 
-    const filas = cont.querySelector('#filas');
-    const boton = cont.querySelector('#importar');
-    const recontar = ()=>{
-      const n = previa.filter(p=>p.incluir).length;
-      boton.textContent = 'Importar ' + n;
-      boton.disabled = !n;
+  h.querySelector('#v-ok').addEventListener('click', async ev=>{
+    if (!escogidas.length){ brindis('Escoja al menos una pieza.'); return; }
+    const excedidas = escogidas.filter(e=>{
+      const p = piezas.find(x=>x.id===e.id);
+      return p && e.cantidad > (Number(p.existencia)||0);
+    });
+    if (excedidas.length){
+      brindis(`No hay suficientes de ${excedidas[0].nombre} en bodega.`);
+      return;
+    }
+    ev.currentTarget.disabled = true;
+    const pr = productoActual();
+    const venta = {
+      idProducto: pr.id, producto: pr.nombre,
+      precio: Number(pr.precio)||0,
+      total: Number(tot.value)||Number(pr.precio)||0,
+      piezas: escogidas.map(e=>({id:e.id, nombre:e.nombre, cantidad:e.cantidad})),
+      cliente: h.querySelector('#v-cli').value,
+      nota: h.querySelector('#v-not').value,
     };
 
-    previa.forEach((p, i)=>{
-      const fila = document.createElement('label');
-      fila.style.cssText = 'display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-bottom:1px solid var(--linea);font-size:13.5px;line-height:1.45'
-        + (p.repetida ? ';opacity:.55' : '');
-      fila.innerHTML = `
-        <input type="checkbox" ${p.incluir?'checked':''} data-i="${i}" style="width:auto;margin-top:3px;flex:0 0 auto">
-        <span style="flex:1;min-width:0">
-          <b></b>
-          <span style="display:block;color:var(--tiza);font-size:12px;margin-top:2px"></span>
-        </span>
-        <span class="cod" style="flex:0 0 auto">${esc(p.codigo)}</span>`;
-      fila.querySelector('b').textContent = p.nombre;
-      fila.querySelector('span span').textContent =
-        (p.repetida ? 'Ya registrada · ' : '') + p.categoria + (p.publico ? ' · ' + p.publico : '');
-      fila.querySelector('input').addEventListener('change', e=>{ p.incluir = e.target.checked; recontar(); });
-      filas.appendChild(fila);
+    escogidas.forEach(e=>{
+      const p = piezas.find(x=>x.id===e.id);
+      if (p) p.existencia = Math.max(0, (Number(p.existencia)||0) - e.cantidad);
     });
-    recontar();
-
-    boton.addEventListener('click', async ()=>{
-      const sel = previa.filter(p=>p.incluir);
-      if (!sel.length){ brindis('No marcó ninguna.'); return; }
-      boton.disabled = true;
-      const avance = cont.querySelector('#avance');
-
-      let n = 0, fallos = 0;
-      for (const p of sel){
-        avance.textContent = `Importando ${n+1} de ${sel.length}…`;
-        const fig = Object.assign(figuraNueva(), {
-          codigo: p.codigo, nombre: p.nombre, categoria: p.categoria, claves: p.claves,
-          notas: p.publico ? 'Para ' + p.publico : '',
-        });
-        let extra = null;
-        if (conFotos){
-          try { extra = {fotoBase64: await comprimir(p.archivo, 700, 0.72)}; } catch(e){}
-        }
-        figuras.push(fig);
-        const enviado = await encolar('guardar', Object.assign({}, fig, extra||{}));
-        if (!enviado && conFotos){ fallos++; }
-        n++;
-      }
-      await cache.set('figuras', figuras);
-      cerrar(); pintar();
-      if (config.url) await sincronizar(true);
-      brindis(fallos
-        ? `${n} importadas, ${fallos} sin subir. Toque el punto de arriba para reintentar.`
-        : `${n} figuras importadas.`);
-    });
+    ventas.push(Object.assign({fecha:new Date().toISOString(), detalle:''}, venta));
+    await cache.set('ventas', ventas);
+    await guardarLocal();
+    cerrar();
+    const enviado = await encolar('venta', venta);
+    brindis(enviado || !config.url ? 'Venta registrada.' : 'Venta guardada. Sube sola al reconectar.');
   });
 }
 
-function abrirFicha(id){
-  const nueva = !id;
-  const f = nueva ? figuraNueva() : Object.assign({}, figuras.find(x=>x.id===id));
+/* ══════════ productos ══════════ */
+function abrirProductos(){
+  const capa = abrir(`
+    <div class="hoja-top"><h2>Productos y precios</h2><button class="cerrar">×</button></div>
+    <span class="pista" style="margin:0 0 14px">Aquí vive el precio. Las piezas no tienen precio propio.</span>
+    <div id="pr-lista"></div>
+    <button class="btn btn-borde" id="pr-nuevo" style="width:100%;margin-top:12px">+ Nuevo producto</button>`);
 
-  const v30 = nueva ? 0 : vendidasDesde(f.id, 30);
+  const h = capa.querySelector('.hoja');
+
+  const pintarLista = ()=>{
+    const caja = h.querySelector('#pr-lista');
+    caja.innerHTML = '';
+    if (!productos.length){
+      caja.innerHTML = '<span class="pista">Sin productos todavía.</span>';
+    }
+    productos.forEach(pr=>{
+      const b = document.createElement('button');
+      b.className = 'ficha';
+      b.innerHTML = `<div class="info">
+          <div class="nom" style="font-size:15px"></div>
+          <div class="cod">${Number(pr.piezas)>0 ? Number(pr.piezas)+' piezas' : 'Piezas libres'}</div>
+        </div>
+        <div class="cant" style="min-width:82px"><b style="font-size:18px">${pesos(pr.precio)}</b></div>`;
+      b.querySelector('.nom').textContent = pr.nombre;
+      b.addEventListener('click', ()=>editarProducto(pr.id));
+      caja.appendChild(b);
+    });
+  };
+  pintarLista();
+  h.querySelector('#pr-nuevo').addEventListener('click', ()=>editarProducto(null));
+}
+
+function editarProducto(id){
+  const nuevo = !id;
+  const pr = nuevo
+    ? {id:nuevoId('p'), nombre:'', precio:0, piezas:0, notas:''}
+    : Object.assign({}, productos.find(x=>x.id===id));
 
   const capa = abrir(`
-    <div class="hoja-top"><h2>${nueva?'Nueva figura':'Editar figura'}</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
-
-    ${nueva?'':`<div class="acciones" style="margin:0 0 18px">
-      <button class="btn btn-verde" id="vender">Registrar venta</button>
-    </div>`}
-
-    ${(!nueva && v30>0)?`<div class="aviso">Vendió <b>${v30}</b> en los últimos 30 días. Le quedan <b>${Number(f.existencia)||0}</b>.</div>`:''}
-
-    <div class="foto-caja">
-      <div class="foto-prev" id="prev">${f.foto?'':'SIN FOTO'}</div>
-      <div style="flex:1">
-        <button class="btn btn-borde" id="btnFoto" style="width:100%">Tomar o subir foto</button>
-        <input type="file" id="archFoto" accept="image/*" style="display:none">
-        <button class="btn btn-peligro" id="quitaFoto" style="width:100%;margin-top:7px;${f.foto?'':'display:none'}">Quitar foto</button>
-      </div>
-    </div>
-
-    <div class="campo"><label for="c-nom">Nombre de la figura</label>
-      <input id="c-nom" placeholder="Oso sentado con corazón"></div>
-
+    <div class="hoja-top"><h2>${nuevo?'Nuevo producto':'Producto'}</h2><button class="cerrar">×</button></div>
+    <div class="campo"><label for="q-nom">Nombre</label>
+      <input id="q-nom" placeholder="Kit de 3 piezas"></div>
     <div class="dos">
-      <div class="campo"><label for="c-cod">Código</label><input id="c-cod" placeholder="OSO-01"></div>
-      <div class="campo"><label for="c-cat">Categoría</label>
-        <input id="c-cat" placeholder="Animales" list="cats"><datalist id="cats"></datalist></div>
+      <div class="campo"><label for="q-pre">Precio</label>
+        <input id="q-pre" type="number" min="0" inputmode="numeric"></div>
+      <div class="campo"><label for="q-pie">Piezas que lleva</label>
+        <input id="q-pie" type="number" min="0" inputmode="numeric">
+        <span class="pista">Deje 0 si varía, como el kit de letras.</span></div>
     </div>
-
-    <div class="campo"><label for="c-cla">Cómo la pide el cliente</label>
-      <textarea id="c-cla" placeholder="oso, osito, ositos, teddy, bear"></textarea>
-      <span class="pista">Separe con comas. Incluya diminutivos y errores comunes: es lo que hace que el buscador la encuentre.</span></div>
-
-    <div class="campo"><label>Piezas listas en bodega</label>
-      <div class="contador">
-        <button type="button" id="menos" aria-label="Restar una">−</button>
-        <input id="c-exi" type="number" min="0" inputmode="numeric">
-        <button type="button" id="mas" aria-label="Sumar una">+</button>
-      </div></div>
-
-    <div class="dos">
-      <div class="campo"><label for="c-pre">Precio por unidad</label>
-        <input id="c-pre" type="number" min="0" inputmode="numeric" placeholder="12000"></div>
-      <div class="campo"><label for="c-min">Avisar cuando queden</label>
-        <input id="c-min" type="number" min="0" inputmode="numeric"></div>
-    </div>
-
-    <div class="dos">
-      <div class="campo"><label for="c-mol">Estado del molde</label>
-        <select id="c-mol">
-          <option value="bueno">Bueno — puedo producir</option>
-          <option value="danado">Dañado — no puedo producir</option>
-          <option value="sinmolde">No tengo el molde</option>
-        </select></div>
-      <div class="campo"><label for="c-dia">Días para producir</label>
-        <input id="c-dia" type="number" min="0" inputmode="numeric"></div>
-    </div>
-
-    <div class="dos">
-      <div class="campo"><label for="c-med">Medidas</label><input id="c-med" placeholder="6 x 5 cm"></div>
-      <div class="campo"><label for="c-ubi">Dónde está el molde</label><input id="c-ubi" placeholder="Caja 1 · Estante A"></div>
-    </div>
-
-    <div class="campo"><label for="c-not">Notas internas</label>
-      <textarea id="c-not" placeholder="El más pedido para baby shower"></textarea></div>
-
+    <div class="campo"><label for="q-not">Nota</label><input id="q-not"></div>
     <div class="acciones">
-      <button class="btn btn-primario" id="guardar">Guardar</button>
-      ${nueva?'':'<button class="btn btn-peligro" id="borrar">Eliminar</button>'}
+      <button class="btn btn-primario" id="q-ok">Guardar</button>
+      ${nuevo?'':'<button class="btn btn-peligro" id="q-del">Eliminar</button>'}
     </div>`);
 
   const h = capa.querySelector('.hoja');
-  const campos = {'#c-nom':'nombre','#c-cod':'codigo','#c-cat':'categoria','#c-cla':'claves',
-                  '#c-exi':'existencia','#c-pre':'precio','#c-min':'minimo','#c-mol':'molde',
-                  '#c-dia':'dias','#c-med':'medidas','#c-ubi':'ubicacion','#c-not':'notas'};
-  Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = f[k] ?? ''; });
+  const campos = {'#q-nom':'nombre','#q-pre':'precio','#q-pie':'piezas','#q-not':'notas'};
+  Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = pr[k] ?? ''; });
 
-  h.querySelector('#cats').innerHTML =
-    [...new Set(figuras.map(x=>x.categoria).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('');
-
-  const prev = h.querySelector('#prev');
-  if (f.foto) prev.style.backgroundImage = `url('${esc(f.foto)}')`;
-  let fotoBase64 = null, quitarFoto = false;
-
-  h.querySelector('#btnFoto').addEventListener('click', ()=>h.querySelector('#archFoto').click());
-  h.querySelector('#archFoto').addEventListener('change', ev=>{
-    const arch = ev.target.files && ev.target.files[0];
-    if (!arch) return;
-    const lector = new FileReader();
-    lector.onload = ()=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const max = 700, esc = Math.min(1, max/Math.max(img.width, img.height));
-        const cv = document.createElement('canvas');
-        cv.width = Math.round(img.width*esc); cv.height = Math.round(img.height*esc);
-        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-        fotoBase64 = cv.toDataURL('image/jpeg', 0.72);
-        quitarFoto = false;
-        prev.style.backgroundImage = `url('${fotoBase64}')`; prev.textContent = '';
-        h.querySelector('#quitaFoto').style.display = '';
-      };
-      img.src = lector.result;
-    };
-    lector.readAsDataURL(arch);
-  });
-
-  h.querySelector('#quitaFoto').addEventListener('click', ()=>{
-    fotoBase64 = null; quitarFoto = true;
-    prev.style.backgroundImage = ''; prev.textContent = 'SIN FOTO';
-    h.querySelector('#quitaFoto').style.display = 'none';
-  });
-
-  const exi = h.querySelector('#c-exi');
-  h.querySelector('#mas').addEventListener('click', ()=>{ exi.value = (Number(exi.value)||0)+1; });
-  h.querySelector('#menos').addEventListener('click', ()=>{ exi.value = Math.max(0,(Number(exi.value)||0)-1); });
-
-  h.querySelector('#guardar').addEventListener('click', async ev=>{
-    Object.entries(campos).forEach(([s,k])=>{ f[k] = h.querySelector(s).value; });
-    if (!(f.nombre||'').trim()){ brindis('Escriba el nombre de la figura.'); return; }
-    ['existencia','precio','minimo','dias'].forEach(k=>{ f[k] = Number(f[k])||0; });
-    if (quitarFoto) f.foto = '';
-    ev.currentTarget.disabled = true;
+  h.querySelector('#q-ok').addEventListener('click', async ()=>{
+    Object.entries(campos).forEach(([s,k])=>{ pr[k] = h.querySelector(s).value; });
+    if (!(pr.nombre||'').trim()){ brindis('Escriba el nombre del producto.'); return; }
+    ['precio','piezas'].forEach(k=>{ pr[k] = Number(pr[k])||0; });
+    const i = productos.findIndex(x=>x.id===pr.id);
+    if (i>=0) productos[i] = pr; else productos.push(pr);
+    await guardarLocal();
     cerrar();
-    await persistir(f, fotoBase64 ? {fotoBase64:fotoBase64} : (quitarFoto ? {quitarFoto:true} : null));
-    brindis(nueva ? 'Figura registrada.' : 'Cambios guardados.');
+    await encolar('guardarProducto', pr);
+    brindis('Producto guardado.');
   });
 
-  const bv = h.querySelector('#vender');
-  if (bv) bv.addEventListener('click', ()=>abrirVenta(f));
-
-  const bb = h.querySelector('#borrar');
-  if (bb) bb.addEventListener('click', ()=>{
-    const c2 = abrir(`<div class="hoja-top"><h2>¿Eliminar esta figura?</h2><button class="cerrar">×</button></div>
-      <p style="font-size:14.5px;line-height:1.6;color:var(--pizarra-2);margin:0">Se borra de la hoja junto con su foto. No se puede deshacer.</p>
-      <div class="acciones"><button class="btn btn-borde" id="no">Cancelar</button>
-      <button class="btn btn-peligro" id="si">Sí, eliminar</button></div>`);
-    c2.querySelector('#no').addEventListener('click', cerrar);
-    c2.querySelector('#si').addEventListener('click', async ()=>{
-      figuras = figuras.filter(x=>x.id!==f.id);
-      await cache.set('figuras', figuras);
-      cerrar(); pintar();
-      const enviado = await encolar('eliminar', {id:f.id});
-      brindis(enviado || !config.url
-        ? 'Figura eliminada.'
-        : 'Borrada aquí. Se quitará de la hoja al reconectar.');
-    });
-  });
-}
-
-function abrirVenta(f){
-  const capa = abrir(`
-    <div class="hoja-top"><h2>Registrar venta</h2><button class="cerrar">×</button></div>
-    <div class="aviso" style="border-left-color:var(--listo)">
-      <b>${esc(f.nombre)}</b> · quedan ${Number(f.existencia)||0} en bodega</div>
-    <div class="campo"><label>Cantidad vendida</label>
-      <div class="contador">
-        <button type="button" id="v-menos">−</button>
-        <input id="v-cant" type="number" min="1" value="1" inputmode="numeric">
-        <button type="button" id="v-mas">+</button>
-      </div></div>
-    <div class="dos">
-      <div class="campo"><label for="v-pre">Precio unitario</label>
-        <input id="v-pre" type="number" min="0" inputmode="numeric" value="${Number(f.precio)||0}"></div>
-      <div class="campo"><label for="v-cli">Cliente (opcional)</label><input id="v-cli"></div>
-    </div>
-    <div class="campo"><label for="v-not">Nota (opcional)</label><input id="v-not" placeholder="Pedido para baby shower"></div>
-    <div class="acciones"><button class="btn btn-verde" id="v-ok">Registrar y descontar</button></div>`);
-
-  const h = capa.querySelector('.hoja'), c = h.querySelector('#v-cant');
-  h.querySelector('#v-mas').addEventListener('click', ()=>{ c.value = (Number(c.value)||0)+1; });
-  h.querySelector('#v-menos').addEventListener('click', ()=>{ c.value = Math.max(1,(Number(c.value)||1)-1); });
-
-  h.querySelector('#v-ok').addEventListener('click', async ev=>{
-    const cantidad = Math.max(1, Number(c.value)||1);
-    const precio = Number(h.querySelector('#v-pre').value)||0;
-    if (cantidad > (Number(f.existencia)||0)){ brindis('No puede vender más de lo que tiene en bodega.'); return; }
-    ev.currentTarget.disabled = true;
-
-    const venta = {id:f.id, codigo:f.codigo, nombre:f.nombre, cantidad:cantidad, precio:precio,
-                   cliente:h.querySelector('#v-cli').value, nota:h.querySelector('#v-not').value};
-    f.existencia = Math.max(0, (Number(f.existencia)||0) - cantidad);
-    const i = figuras.findIndex(x=>x.id===f.id);
-    if (i>=0) figuras[i] = f;
-    ventas.push(Object.assign({fecha:new Date().toISOString(), total:cantidad*precio}, venta));
-    await cache.set('figuras', figuras); await cache.set('ventas', ventas);
-    cerrar(); pintar();
-
-    const enviado = await encolar('venta', venta);
-    brindis(enviado || !config.url
-      ? `Venta registrada. Quedan ${f.existencia}.`
-      : `Venta guardada en el celular. Sube sola al reconectar.`);
+  const bd = h.querySelector('#q-del');
+  if (bd) bd.addEventListener('click', async ()=>{
+    productos = productos.filter(x=>x.id!==pr.id);
+    await guardarLocal();
+    cerrar();
+    await encolar('eliminarProducto', {id:pr.id});
+    brindis('Producto eliminado.');
   });
 }
 
@@ -911,64 +1118,39 @@ const MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio',
                      'agosto','septiembre','octubre','noviembre','diciembre'];
 
 function porMes(n){
-  const mapa = new Map();
-  const hoy = new Date();
+  const mapa = new Map(), hoy = new Date();
   for (let i = n-1; i >= 0; i--){
     const d = new Date(hoy.getFullYear(), hoy.getMonth()-i, 1);
-    const clave = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    mapa.set(clave, {clave:clave, etiqueta: MESES[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2),
-                     unidades:0, ingresos:0});
+    const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    mapa.set(k, {etiqueta: MESES[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2), n:0, ingresos:0});
   }
   ventas.forEach(v=>{
     const d = new Date(v.fecha);
     if (isNaN(d)) return;
-    const clave = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    const m = mapa.get(clave);
-    if (m){ m.unidades += Number(v.cantidad)||0; m.ingresos += Number(v.total)||0; }
+    const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const m = mapa.get(k);
+    if (m){ m.n++; m.ingresos += Number(v.total)||0; }
   });
   return [...mapa.values()];
 }
 
 function estacionalidad(){
-  const acum = MESES.map(()=>({unidades:0, ingresos:0, años:new Set()}));
+  const acum = MESES.map(()=>({n:0, ingresos:0, anios:new Set()}));
   ventas.forEach(v=>{
     const d = new Date(v.fecha);
     if (isNaN(d)) return;
     const a = acum[d.getMonth()];
-    a.unidades += Number(v.cantidad)||0;
-    a.ingresos += Number(v.total)||0;
-    a.años.add(d.getFullYear());
+    a.n++; a.ingresos += Number(v.total)||0; a.anios.add(d.getFullYear());
   });
-  return acum.map((a,i)=>({
-    mes: MESES_LARGO[i],
-    unidades: a.unidades,
-    ingresos: a.ingresos,
-    años: a.años.size,
-    promedio: a.años.size ? a.unidades/a.años.size : 0,
-  }));
+  return acum.map((a,i)=>({mes:MESES_LARGO[i], n:a.n, ingresos:a.ingresos, anios:a.anios.size}));
 }
 
-function topFiguras(desdeDias, limite){
-  const corte = Date.now() - desdeDias*86400000;
-  const mapa = new Map();
-  ventas.forEach(v=>{
-    if (new Date(v.fecha).getTime() < corte) return;
-    const k = String(v.id);
-    const m = mapa.get(k) || {nombre:v.nombre, codigo:v.codigo, unidades:0, ingresos:0};
-    m.unidades += Number(v.cantidad)||0;
-    m.ingresos += Number(v.total)||0;
-    mapa.set(k, m);
-  });
-  return [...mapa.values()].sort((a,b)=>b.unidades-a.unidades).slice(0, limite||15);
-}
-
-/* Excel abre bien el CSV con punto y coma y marca de orden de bytes. */
 function descargarCSV(nombre, filas){
-  const esc1 = c => {
-    const s = String(c == null ? '' : c);
+  const c = v => {
+    const s = String(v == null ? '' : v);
     return /[";\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
   };
-  const texto = '\uFEFF' + filas.map(f=>f.map(esc1).join(';')).join('\r\n');
+  const texto = '\uFEFF' + filas.map(f=>f.map(c).join(';')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([texto], {type:'text/csv;charset=utf-8'}));
   a.download = nombre;
@@ -977,84 +1159,78 @@ function descargarCSV(nombre, filas){
 }
 
 function csvInventario(){
-  const filas = [['Codigo','Nombre','Categoria','Palabras de busqueda','Estado','En bodega',
-                  'Avisar en','Precio','Valor en bodega','Molde','Dias produccion','Medidas','Ubicacion','Notas']];
-  figuras.slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).forEach(f=>{
-    filas.push([f.codigo, f.nombre, f.categoria, f.claves, etiqueta(f), Number(f.existencia)||0,
-                Number(f.minimo)||0, Number(f.precio)||0,
-                (Number(f.existencia)||0)*(Number(f.precio)||0),
-                f.molde, Number(f.dias)||0, f.medidas, f.ubicacion, f.notas]);
+  const filas = [['Molde','Codigo','Ubicacion','Estado molde','Pieza N','Pieza','Palabras de busqueda','En bodega','Avisar en']];
+  moldes.slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).forEach(m=>{
+    const suyas = piezasDe(m.id);
+    if (!suyas.length) filas.push([m.nombre, m.codigo, m.ubicacion, m.estado, '', '(sin piezas)', '', '', '']);
+    suyas.forEach(p=>{
+      filas.push([m.nombre, m.codigo, m.ubicacion, m.estado, p.numero,
+                  p.nombre || '(sin nombre)', p.claves, Number(p.existencia)||0, umbral(p)]);
+    });
   });
   descargarCSV(`inventario-${new Date().toISOString().slice(0,10)}.csv`, filas);
 }
 
 function csvVentas(){
   if (!ventas.length){ brindis('Todavía no hay ventas registradas.'); return; }
-  const filas = [['Fecha','Ano','Mes','Codigo','Figura','Cantidad','Precio unitario','Total','Cliente','Nota']];
+  const filas = [['Fecha','Ano','Mes','Producto','Precio','Total','Piezas','Cliente','Nota']];
   ventas.slice().sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)).forEach(v=>{
     const d = new Date(v.fecha);
     filas.push([d.toISOString().slice(0,10), d.getFullYear(), MESES_LARGO[d.getMonth()],
-                v.codigo, v.nombre, Number(v.cantidad)||0, Number(v.precio)||0,
-                Number(v.total)||0, v.cliente||'', v.nota||'']);
+                v.producto, Number(v.precio)||0, Number(v.total)||0, v.detalle||'', v.cliente||'', v.nota||'']);
   });
   descargarCSV(`ventas-${new Date().toISOString().slice(0,10)}.csv`, filas);
 }
 
 function imprimirReporte(){
   const meses = porMes(12);
-  const est = estacionalidad().filter(m=>m.unidades>0).sort((a,b)=>b.unidades-a.unidades);
-  const top = topFiguras(365, 20);
-  const listas = figuras.filter(f=>estado(f)==='listo');
-  const piezas = listas.reduce((s,f)=>s+(Number(f.existencia)||0),0);
-  const valor  = listas.reduce((s,f)=>s+(Number(f.existencia)||0)*(Number(f.precio)||0),0);
-  const bajas  = figuras.filter(f=>estado(f)==='listo' && Number(f.existencia) <= umbral(f));
+  const est = estacionalidad().filter(m=>m.n>0).sort((a,b)=>b.n-a.n);
+  const enBodega = piezas.filter(p=>estado(p)==='listo').reduce((s,p)=>s+(Number(p.existencia)||0),0);
+  const bajas = piezas.filter(p=>estado(p)==='listo' && Number(p.existencia) <= umbral(p));
+  const pendientes = piezas.filter(sinNombre);
+  const incompletos = moldes.filter(m=>faltan(m) > 0);
   const hoy = new Date();
 
-  const tabla = (cabeceras, filas) => filas.length
-    ? `<table><thead><tr>${cabeceras.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')}</tr></thead>
+  const tabla = (cab, filas) => filas.length
+    ? `<table><thead><tr>${cab.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')}</tr></thead>
        <tbody>${filas.map(f=>`<tr>${f.map((c,i)=>`<td${i?' class="num"':''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
-    : `<p style="font-size:9.5pt;color:#666">Sin datos todavía.</p>`;
+    : '<p style="font-size:9.5pt;color:#666">Sin datos todavía.</p>';
 
-  document.getElementById('impresion').innerHTML = `
+  $('#impresion').innerHTML = `
     <h1>Filemón · Reporte de inventario y ventas</h1>
-    <div style="font-size:9pt;color:#555">
-      Generado el ${hoy.getDate()} de ${MESES_LARGO[hoy.getMonth()]} de ${hoy.getFullYear()}
-    </div>
+    <div style="font-size:9pt;color:#555">Generado el ${hoy.getDate()} de ${MESES_LARGO[hoy.getMonth()]} de ${hoy.getFullYear()}</div>
 
     <h2>Resumen</h2>
     ${tabla(['Indicador','Valor'], [
-      ['Figuras registradas', figuras.length],
-      ['Piezas listas en bodega', piezas],
-      ['Valor de lo que está listo', pesos(valor)],
-      ['Figuras por reponer', bajas.length],
-      ['Moldes dañados', figuras.filter(f=>f.molde==='danado').length],
+      ['Moldes registrados', moldes.length],
+      ['Piezas distintas', piezas.length],
+      ['Piezas en bodega', enBodega],
+      ['Piezas sin nombre', pendientes.length],
+      ['Moldes con piezas por registrar', incompletos.length],
+      ['Moldes dañados', moldes.filter(m=>m.estado==='danado').length],
       ['Ventas registradas', ventas.length],
     ])}
 
     <h2>Ventas mes a mes (últimos 12 meses)</h2>
-    ${tabla(['Mes','Unidades','Ingresos'],
-      meses.map(m=>[m.etiqueta, m.unidades, pesos(m.ingresos)]))}
+    ${tabla(['Mes','Ventas','Ingresos'], meses.map(m=>[m.etiqueta, m.n, pesos(m.ingresos)]))}
 
-    <h2>Meses fuertes (todos los años juntos)</h2>
+    <h2>Meses fuertes</h2>
     ${est.length
-      ? tabla(['Mes','Unidades','Ingresos','Años con datos'],
-          est.map(m=>[m.mes, m.unidades, pesos(m.ingresos), m.años]))
-        + `<p style="font-size:8.5pt;color:#666;margin-top:5pt">
-             ${est.some(m=>m.años>1)
-               ? 'Con más de un año de datos, esta tabla ya indica temporada.'
-               : 'Todavía hay menos de un año de historia: esta tabla muestra lo vendido, no una temporada confirmada.'}
-           </p>`
-      : `<p style="font-size:9.5pt;color:#666">Se necesita al menos un año de ventas registradas para hablar de temporadas.</p>`}
+      ? tabla(['Mes','Ventas','Ingresos','Años con datos'], est.map(m=>[m.mes, m.n, pesos(m.ingresos), m.anios]))
+        + `<p style="font-size:8.5pt;color:#666;margin-top:5pt">${est.some(m=>m.anios>1)
+            ? 'Con más de un año de datos, esta tabla ya indica temporada.'
+            : 'Todavía hay menos de un año de historia: muestra lo vendido, no una temporada confirmada.'}</p>`
+      : '<p style="font-size:9.5pt;color:#666">Se necesita al menos un año de ventas para hablar de temporadas.</p>'}
 
-    <h2>Figuras más vendidas (últimos 12 meses)</h2>
-    ${tabla(['Figura','Código','Unidades','Ingresos'],
-      top.map(t=>[t.nombre, t.codigo, t.unidades, pesos(t.ingresos)]))}
+    <h2>Piezas por reponer</h2>
+    ${tabla(['Pieza','Molde','En bodega','Avisar en'],
+      bajas.map(p=>[p.nombre, (moldeDe(p).codigo||'') + ' · ' + p.numero, Number(p.existencia)||0, umbral(p)]))}
 
-    <h2>Por reponer</h2>
-    ${tabla(['Figura','En bodega','Avisar en','Días de producción'],
-      bajas.map(f=>[f.nombre, Number(f.existencia)||0, umbral(f), Number(f.dias)||0]))}
+    <h2>Moldes con piezas sin registrar</h2>
+    ${tabla(['Molde','Código','Cavidades','Registradas'],
+      incompletos.map(m=>[m.nombre, m.codigo, Number(m.cavidades)||0, piezasDe(m.id).length]))}
 
-    <div class="pie">Documento interno de Filemón. Generado desde el inventario.</div>`;
+    <div class="pie">Documento interno de Filemón.</div>`;
 
   cerrar();
   setTimeout(()=>window.print(), 120);
@@ -1062,42 +1238,29 @@ function imprimirReporte(){
 
 function abrirReportes(){
   const meses = porMes(12);
-  const maxU = Math.max(1, ...meses.map(m=>m.unidades));
-  const pico = Math.max(...meses.map(m=>m.unidades));
-  const conVentas = ventas.length > 0;
+  const max = Math.max(1, ...meses.map(m=>m.n));
+  const pico = Math.max(...meses.map(m=>m.n));
 
   const capa = abrir(`
     <div class="hoja-top"><h2>Reportes</h2><button class="cerrar">×</button></div>
-
     <div class="campo"><label>Ventas mes a mes</label>
-      ${conVentas
-        ? meses.map(m=>`
-            <div class="barra${m.unidades===pico && pico>0 ? ' pico':''}">
-              <span>${m.etiqueta}</span>
-              <span style="flex:1"><i style="width:${Math.round(m.unidades/maxU*100)}%"></i></span>
-              <span class="val">${m.unidades}</span>
-            </div>`).join('')
-        : `<span class="pista">Aún no hay ventas registradas. En cuanto empiece a registrarlas,
-             aquí va a ver de un vistazo cuáles son sus meses fuertes.</span>`}
+      ${ventas.length
+        ? meses.map(m=>`<div class="barra${m.n===pico && pico>0 ? ' pico':''}">
+             <span>${m.etiqueta}</span><span style="flex:1"><i style="width:${Math.round(m.n/max*100)}%"></i></span>
+             <span class="val">${m.n}</span></div>`).join('')
+        : '<span class="pista">Aún no hay ventas registradas. En cuanto empiece, aquí verá sus meses fuertes.</span>'}
     </div>
-
     <div class="campo"><label>Descargar para Excel</label>
       <button class="btn btn-borde" id="r-inv" style="width:100%">Inventario completo</button>
       <button class="btn btn-borde" id="r-ven" style="width:100%;margin-top:7px">Historial de ventas</button>
-      <span class="pista">Se descargan como CSV: se abren directo en Excel con doble clic.</span></div>
-
+      <span class="pista">Se abren directo en Excel con doble clic.</span></div>
     <div class="campo"><label>Reporte en PDF</label>
       <button class="btn btn-primario" id="r-pdf" style="width:100%">Generar reporte</button>
-      <span class="pista">Se abre la ventana de impresión: elija <b>Guardar como PDF</b> en el destino.</span></div>
-
-    ${config.url ? `<div class="aviso" style="margin-top:16px">
-      Para el análisis por temporada con varios años, ejecute <b>generarReporte</b> desde
-      Apps Script: arma una hoja REPORTE que puede descargar como Excel o PDF desde el menú
-      Archivo de Google Sheets.</div>` : ''}`);
+      <span class="pista">Elija <b>Guardar como PDF</b> en el destino de impresión.</span></div>`);
 
   const h = capa.querySelector('.hoja');
   h.querySelector('#r-inv').addEventListener('click', ()=>{
-    if (!figuras.length){ brindis('Todavía no hay figuras registradas.'); return; }
+    if (!moldes.length){ brindis('Todavía no hay moldes.'); return; }
     csvInventario(); brindis('Inventario descargado.');
   });
   h.querySelector('#r-ven').addEventListener('click', csvVentas);
@@ -1106,75 +1269,56 @@ function abrirReportes(){
 
 /* ══════════ menú ══════════ */
 function abrirMenu(){
-  const listas = figuras.filter(f=>estado(f)==='listo');
-  const bajas  = figuras.filter(f=>estado(f)==='listo' && Number(f.existencia) <= umbral(f));
-  const danados= figuras.filter(f=>f.molde==='danado');
-  const piezas = listas.reduce((s,f)=>s+(Number(f.existencia)||0),0);
-  const valor  = listas.reduce((s,f)=>s+(Number(f.existencia)||0)*(Number(f.precio)||0),0);
-
-  const mes = ventas.filter(v=>new Date(v.fecha).getTime() >= Date.now()-30*86400000);
-  const vendidoMes = mes.reduce((s,v)=>s+(Number(v.total)||0),0);
-
-  const producir = figuras.map(f=>{
-    const v = vendidasDesde(f.id, 30);
-    const dia = v/30;
-    const cobertura = dia > 0 ? (Number(f.existencia)||0)/dia : Infinity;
-    return {f:f, v:v, cobertura:cobertura};
-  }).filter(x=>x.v>0 && x.cobertura < 21 && x.f.molde==='bueno')
-    .sort((a,b)=>a.cobertura-b.cobertura).slice(0,6);
+  const enBodega = piezas.filter(p=>estado(p)==='listo').reduce((s,p)=>s+(Number(p.existencia)||0),0);
+  const bajas = piezas.filter(p=>estado(p)==='listo' && Number(p.existencia) <= umbral(p));
+  const pendientes = piezas.filter(sinNombre).length;
+  const huecos = moldes.reduce((s,m)=>s+faltan(m), 0);
 
   const capa = abrir(`
     <div class="hoja-top"><h2>El taller hoy</h2><button class="cerrar">×</button></div>
 
     <div class="tarjetas">
-      <div class="tarjeta"><b>${figuras.length}</b><span>Figuras registradas</span></div>
-      <div class="tarjeta"><b>${piezas}</b><span>Piezas en bodega</span></div>
-      <div class="tarjeta"><b>${bajas.length}</b><span>Se están acabando</span></div>
-      <div class="tarjeta"><b>${danados.length}</b><span>Moldes dañados</span></div>
+      <div class="tarjeta"><b>${moldes.length}</b><span>Moldes</span></div>
+      <div class="tarjeta"><b>${piezas.length}</b><span>Piezas distintas</span></div>
+      <div class="tarjeta"><b>${enBodega}</b><span>Piezas en bodega</span></div>
+      <div class="tarjeta"><b>${pendientes + huecos}</b><span>Por completar</span></div>
     </div>
 
-    <div class="aviso">Inventario listo para vender: <b>${pesos(valor)}</b><br>
-      Vendido en los últimos 30 días: <b>${pesos(vendidoMes)}</b></div>
+    ${(pendientes + huecos) ? `<div class="aviso">
+      Hay <b>${pendientes}</b> piezas sin nombre y <b>${huecos}</b> por registrar.
+      Use el filtro <b>Sin nombre</b> para irlas completando.</div>` : ''}
 
-    ${producir.length ? `<div class="campo"><label>Qué producir primero</label>
-      ${producir.map(x=>`<div style="background:#fff;border:1px solid var(--linea);border-left:4px solid var(--encargo);
-        border-radius:3px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;line-height:1.5">
-        <b>${esc(x.f.nombre)}</b><br>
-        <span style="color:var(--pizarra-2)">Vendió ${x.v} en 30 días · quedan ${x.f.existencia} ·
-        ${x.cobertura < 1 ? 'agotada' : 'alcanza ~' + Math.round(x.cobertura) + ' días'}</span></div>`).join('')}
-      <span class="pista">Calculado con el ritmo de venta de los últimos 30 días.</span></div>`
-    : `<div class="campo"><label>Qué producir primero</label>
-        <span class="pista">Registre ventas por unos días y aquí le aparecerá qué reponer, ordenado por urgencia.</span></div>`}
+    ${bajas.length ? `<div class="aviso" style="border-left-color:var(--alerta)">
+      <b>Toca reponer:</b> ${bajas.slice(0,8).map(p=>`${esc(p.nombre)} (${p.existencia})`).join(' · ')}</div>` : ''}
 
-    <div class="campo" style="margin-top:18px"><label>Reportes</label>
-      <button class="btn btn-borde" id="verReportes" style="width:100%">Ventas por mes, Excel y PDF</button></div>
+    <div class="campo"><label>Vender</label>
+      <button class="btn btn-verde" id="m-venta" style="width:100%">Registrar una venta</button></div>
 
-    <div class="campo" style="margin-top:18px"><label>Cargar su catálogo</label>
-      <button class="btn btn-borde" id="importarFotos" style="width:100%">Importar desde las fotos</button>
-      <span class="pista">Lee los nombres de sus archivos y crea las figuras con las palabras de búsqueda ya puestas.</span></div>
+    <div class="campo"><label>Precios</label>
+      <button class="btn btn-borde" id="m-prod" style="width:100%">Productos y precios</button></div>
+
+    <div class="campo"><label>Reportes</label>
+      <button class="btn btn-borde" id="m-rep" style="width:100%">Ventas por mes, Excel y PDF</button></div>
 
     <div class="campo" style="margin-top:18px"><label>Conexión con Google Sheets</label>
-      <input id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(config.url)}">
+      <input id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(config.url||'')}">
       <span class="pista">Dirección de la aplicación web de Apps Script.</span></div>
     <div class="campo">
-      <input id="cfg-clave" placeholder="Clave secreta" value="${esc(config.clave)}">
+      <input id="cfg-clave" placeholder="Clave secreta" value="${esc(config.clave||'')}">
       <span class="pista">La misma que puso en la variable CLAVE del script.</span></div>
     <div class="acciones" style="margin-top:6px">
       <button class="btn btn-primario" id="cfg-ok">Guardar conexión</button>
       <button class="btn btn-borde" id="cfg-sync">Sincronizar</button>
     </div>
 
-    <div class="campo" style="margin-top:22px"><label>Respaldo local</label>
-      <button class="btn btn-borde" id="exportar" style="width:100%">Descargar respaldo</button></div>
-    <div class="campo">
-      <button class="btn btn-borde" id="importarBtn" style="width:100%">Cargar respaldo o subir todo a la hoja</button>
-      <input type="file" id="importar" accept="application/json" style="display:none">
-      <span class="pista">Sirve para pasar lo que ya tenía registrado a su hoja de cálculo.</span></div>`);
+    <div class="campo" style="margin-top:22px"><label>Respaldo</label>
+      <button class="btn btn-borde" id="exportar" style="width:100%">Descargar respaldo</button>
+      <span class="pista">Guárdelo en su correo una vez al mes.</span></div>`);
 
   const h = capa.querySelector('.hoja');
-
-  h.querySelector('#verReportes').addEventListener('click', abrirReportes);
-  h.querySelector('#importarFotos').addEventListener('click', abrirImportador);
+  h.querySelector('#m-venta').addEventListener('click', abrirVenta);
+  h.querySelector('#m-prod').addEventListener('click', abrirProductos);
+  h.querySelector('#m-rep').addEventListener('click', abrirReportes);
 
   h.querySelector('#cfg-ok').addEventListener('click', async ()=>{
     config.url = h.querySelector('#cfg-url').value.trim();
@@ -1186,46 +1330,12 @@ function abrirMenu(){
   h.querySelector('#cfg-sync').addEventListener('click', ()=>{ cerrar(); sincronizar(); });
 
   h.querySelector('#exportar').addEventListener('click', ()=>{
-    const blob = new Blob([JSON.stringify({figuras, ventas, fecha:new Date().toISOString()}, null, 2)],
-                          {type:'application/json'});
+    const datos = JSON.stringify({moldes, piezas, productos, ventas, fecha:new Date().toISOString()}, null, 2);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([datos], {type:'application/json'}));
     a.download = `filemon-${new Date().toISOString().slice(0,10)}.json`;
     a.click(); URL.revokeObjectURL(a.href);
     brindis('Respaldo descargado.');
-  });
-
-  h.querySelector('#importarBtn').addEventListener('click', ()=>h.querySelector('#importar').click());
-  h.querySelector('#importar').addEventListener('change', ev=>{
-    const arch = ev.target.files && ev.target.files[0];
-    if (!arch) return;
-    const lector = new FileReader();
-    lector.onload = async ()=>{
-      try{
-        const d = JSON.parse(lector.result);
-        if (!Array.isArray(d.figuras)) throw new Error('formato');
-        const fotos = d.fotos || {};
-        figuras = d.figuras.map(f=>Object.assign({}, f, {foto:f.foto||''}));
-        ventas = d.ventas || ventas;
-        await cache.set('figuras', figuras); await cache.set('ventas', ventas);
-        cerrar(); pintar();
-
-        if (!config.url){
-          brindis(`${figuras.length} figuras cargadas. Conecte la hoja para subirlas.`);
-          return;
-        }
-        figuras.forEach(f=>{
-          const op = Object.assign({}, f);
-          if (fotos[f.id]) op.fotoBase64 = fotos[f.id];
-          cola.push({tipo:'guardar', datos:op});
-        });
-        await guardarCola(); pintar();
-        const enviado = await drenar(false);
-        if (enviado){ await sincronizar(true); brindis(`${figuras.length} figuras subidas a la hoja.`); }
-        else brindis('Quedaron cambios sin enviar. Toque el punto de arriba para reintentar.');
-      } catch(e){ brindis('Ese archivo no es un respaldo válido.'); }
-    };
-    lector.readAsText(arch);
   });
 }
 
@@ -1243,7 +1353,7 @@ $('#chips').addEventListener('click', ev=>{
   $('#chips').querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
   pintar();
 });
-$('#nueva').addEventListener('click', ()=>abrirFicha(null));
+$('#nuevo').addEventListener('click', ()=>abrirMolde(null));
 $('#menu').addEventListener('click', abrirMenu);
 $('#btnSync').addEventListener('click', ()=>{ config.url ? sincronizar() : abrirMenu(); });
 document.addEventListener('keydown', ev=>{ if (ev.key==='Escape') cerrar(); });

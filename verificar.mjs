@@ -40,7 +40,7 @@ else ok('El config arranca vacío');
 /* ─────────────────────────────── 3. la cola */
 grupo('Invariante de la cola (regla 2 de CLAUDE.md)');
 
-const directas = [...js.matchAll(/api\(\s*'(guardar|venta|eliminar|importar)'/g)].map(m => m[1]);
+const directas = [...js.matchAll(/api\(\s*'(guardar\w*|venta|eliminar\w*)'/g)].map(m => m[1]);
 if (directas.length)
   falla(`Hay ${directas.length} llamada(s) directa(s) que saltan la cola: ${[...new Set(directas)].join(', ')}. Deben pasar por encolar().`);
 else ok('Ninguna mutación llama a api() directamente');
@@ -58,40 +58,65 @@ else {
   else ok('sincronizar() vacía la cola antes de leer la hoja');
 }
 
-if (/fotoBase64/.test(js) && /Object\.assign\(\{\},\s*figura,\s*extra/.test(js))
+if (/fotoBase64/.test(js) && /Object\.assign\(\{\},\s*m,\s*extra/.test(js))
   ok('La foto viaja dentro de la operación encolada');
 else aviso('No se detectó que fotoBase64 se incluya en la operación encolada (regla 3)');
 
 /* ─────────────────────────────── 4. restos del modelo viejo */
 grupo('Restos de versiones anteriores');
-const restos = ['eliminadas', 'f.pendiente', 'pendiente:true', 'delete copia.pendiente']
-  .filter(t => html.includes(t));
+const restos = ['eliminadas', 'f.pendiente', 'pendiente:true', 'COLUMNAS_VENTAS', "figuras:"]
+  .filter(t => html.includes(t) || gs.includes(t));
 restos.length ? falla(`Quedaron restos: ${restos.join(', ')}`) : ok('Sin restos del modelo anterior');
+
+/* Cada dato en su tabla. Mezclarlos es el error de modelo que ya cometimos. */
+const columnasDe = c => ((gs.match(new RegExp(`const ${c}\\s*=\\s*\\[([\\s\\S]*?)\\];`)) || [, ''])[1]
+  .match(/'([^']+)'/g) || []).map(s => s.slice(1, -1));
+
+const colM = columnasDe('COL_MOLDES'), colZ = columnasDe('COL_PIEZAS'), colP = columnasDe('COL_PRODUCTOS');
+
+if (colM.includes('precio') || colZ.includes('precio'))
+  falla('Hay un campo precio en moldes o piezas: el precio vive en PRODUCTOS');
+else if (!colP.includes('precio')) falla('PRODUCTOS no tiene columna precio');
+else ok('El precio vive solo en PRODUCTOS');
+
+if (colM.includes('existencia'))
+  falla('Hay existencia en MOLDES: el inventario vive en PIEZAS');
+else if (!colZ.includes('existencia')) falla('PIEZAS no tiene columna existencia');
+else ok('El inventario vive solo en PIEZAS');
+
+if (!colZ.includes('idMolde')) falla('PIEZAS no apunta a su molde');
+else ok('Cada pieza apunta a su molde');
 
 /* ─────────────────────────────── 5. app ↔ backend */
 grupo('Acoplamiento entre la app y la hoja');
 
-const acciones = new Set([...js.matchAll(/encolar\(\s*'([a-z]+)'/g)].map(m => m[1]));
+const acciones = new Set([...js.matchAll(/encolar\(\s*'([a-zA-Z]+)'/g)].map(m => m[1]));
 acciones.add('leer');
-const despachadas = new Set([...gs.matchAll(/case\s+'([a-z]+)'/g)].map(m => m[1]));
+const despachadas = new Set([...gs.matchAll(/case\s+'([a-zA-Z]+)'/g)].map(m => m[1]));
 const huerfanas = [...acciones].filter(a => !despachadas.has(a));
 huerfanas.length
   ? falla(`La app pide acciones que el backend no atiende: ${huerfanas.join(', ')}`)
   : ok(`Las ${acciones.size} acciones de la app existen en el despachador`);
 
-const columnas = ((gs.match(/const COLUMNAS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1]
-  .match(/'([^']+)'/g) || []).map(s => s.slice(1, -1));
-const literal = (js.match(/\{\s*id:'f'\+Date\.now\(\)[\s\S]*?\}/) || [''])[0];
-const campos = (literal.match(/(\w+)\s*:/g) || []).map(s => s.replace(/\s*:$/, ''));
+const tablas = [
+  ['molde', 'COL_MOLDES', /function moldeNuevo\(\)\{[\s\S]*?return (\{[\s\S]*?\});/],
+  ['pieza', 'COL_PIEZAS', /function piezaNueva\([^)]*\)\{[\s\S]*?return (\{[\s\S]*?\});/],
+];
 
-if (!columnas.length) falla('No se pudo leer COLUMNAS de Codigo.gs');
-else if (!campos.length) falla('No se pudo leer los campos de la figura en index.html');
-else {
+for (const [nombre, constante, re] of tablas) {
+  const columnas = ((gs.match(new RegExp(`const ${constante}\\s*=\\s*\\[([\\s\\S]*?)\\]`)) || [, ''])[1]
+    .match(/'([^']+)'/g) || []).map(s => s.slice(1, -1));
+  const literal = (js.match(re) || [, ''])[1];
+  const campos = (literal.match(/(\w+)\s*:/g) || []).map(s => s.replace(/\s*:$/, ''));
+
+  if (!columnas.length) { falla(`No se pudo leer ${constante}`); continue; }
+  if (!campos.length) { falla(`No se pudo leer los campos de ${nombre} en index.html`); continue; }
+
   const faltan = campos.filter(c => !columnas.includes(c));
-  const sobran = columnas.filter(c => !campos.includes(c) && !['foto', 'actualizado'].includes(c));
-  if (faltan.length) falla(`Campos que la app envía y la hoja no guarda: ${faltan.join(', ')}`);
-  else if (sobran.length) aviso(`Columnas de la hoja que la app nunca llena: ${sobran.join(', ')}`);
-  else ok(`Los ${campos.length} campos de la figura calzan con COLUMNAS`);
+  const sobran = columnas.filter(c => !campos.includes(c) && c !== 'actualizado');
+  if (faltan.length) falla(`Campos de ${nombre} que la hoja no guarda: ${faltan.join(', ')}`);
+  else if (sobran.length) aviso(`Columnas de ${constante} que la app nunca llena: ${sobran.join(', ')}`);
+  else ok(`Los ${campos.length} campos de ${nombre} calzan con ${constante}`);
 }
 
 /* ─────────────────────────────── 6. entorno */

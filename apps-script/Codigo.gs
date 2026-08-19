@@ -2,55 +2,86 @@
  * FILEMÓN — Puente entre la app de inventario y Google Sheets.
  *
  * Este archivo va DENTRO de su hoja de cálculo (Extensiones > Apps Script).
- * Instrucciones completas en el README del repositorio.
+ *
+ * MODELO
+ *   MOLDE     la plancha física: foto, caja, estado, días de producción.
+ *   PIEZA     cada figura que sale de esa plancha. Aquí vive el inventario.
+ *   PRODUCTO  lo que se cobra (Kit de 3 piezas, Kit de letras). Aquí vive el precio.
+ *   VENTA     une los tres: un producto, las piezas que salieron, el total.
  */
 
 // ─────────────────────────────────────────────────────────────
-// 1. CAMBIE ESTA CLAVE POR UNA SUYA ANTES DE PUBLICAR
-//    Debe ser exactamente la misma que escriba en la app.
-//    Use algo largo, sin espacios. Ejemplo: filemon-yeso-2026-x7k9
+// CAMBIE ESTA CLAVE POR UNA SUYA ANTES DE PUBLICAR
+// Debe ser exactamente la misma que escriba en la app.
 // ─────────────────────────────────────────────────────────────
 const CLAVE = 'CAMBIE-ESTA-CLAVE';
 
-const HOJA_FIGURAS = 'FIGURAS';
-const HOJA_VENTAS  = 'VENTAS';
-const CARPETA      = 'Filemon - Fotos';
+const HOJA_MOLDES    = 'MOLDES';
+const HOJA_PIEZAS    = 'PIEZAS';
+const HOJA_PRODUCTOS = 'PRODUCTOS';
+const HOJA_VENTAS    = 'VENTAS';
+const HOJA_REPORTE   = 'REPORTE';
 
-const COLUMNAS = ['id','codigo','nombre','categoria','claves','medidas','existencia',
-                  'minimo','precio','dias','molde','ubicacion','notas','foto','actualizado'];
+const CARPETA        = 'Filemon - Fotos';   // fotos tomadas desde el celular
+const CARPETA_ORIGEN = 'FILEMON MOLDES';    // sus fotos originales del taller
 
-const COLUMNAS_VENTAS = ['fecha','id','codigo','nombre','cantidad','precio','total','cliente','nota'];
+const COL_MOLDES = ['id','codigo','nombre','categoria','claves','medidas','cavidades',
+                    'dias','estado','ubicacion','notas','foto','giro','actualizado'];
+
+const COL_PIEZAS = ['id','idMolde','numero','nombre','claves','existencia','minimo','actualizado'];
+
+const COL_PRODUCTOS = ['id','nombre','precio','piezas','notas','actualizado'];
+
+const COL_VENTAS = ['fecha','idProducto','producto','precio','total','detalle','cliente','nota'];
+
+const PRODUCTOS_INICIALES = [
+  ['Kit de 3 piezas', 12000, 3, 'El cliente escoge las tres piezas'],
+  ['Kit de letras con el nombre', 15000, 0, 'La cantidad de letras depende del nombre'],
+];
 
 
-/**
- * Ejecute esta función UNA VEZ desde el editor (botón Ejecutar)
- * para que cree las hojas, los encabezados y la carpeta de fotos.
- */
+/* ══════════════════════════════════════════════════════════════
+   PREPARACIÓN
+   ══════════════════════════════════════════════════════════════ */
+
 function prepararHoja() {
   const libro = SpreadsheetApp.getActiveSpreadsheet();
 
-  let hf = libro.getSheetByName(HOJA_FIGURAS);
-  if (!hf) hf = libro.insertSheet(HOJA_FIGURAS);
-  if (hf.getLastRow() === 0) {
-    hf.getRange(1, 1, 1, COLUMNAS.length).setValues([COLUMNAS])
-      .setFontWeight('bold').setBackground('#2B3439').setFontColor('#FFFFFF');
-    hf.setFrozenRows(1);
-    hf.setColumnWidth(3, 200);
-    hf.setColumnWidth(5, 260);
-  }
+  crearHoja(libro, HOJA_MOLDES,    COL_MOLDES,    '#2B3439');
+  crearHoja(libro, HOJA_PIEZAS,    COL_PIEZAS,    '#1F5F6B');
+  crearHoja(libro, HOJA_PRODUCTOS, COL_PRODUCTOS, '#A2620A');
+  crearHoja(libro, HOJA_VENTAS,    COL_VENTAS,    '#146B52');
 
-  let hv = libro.getSheetByName(HOJA_VENTAS);
-  if (!hv) hv = libro.insertSheet(HOJA_VENTAS);
-  if (hv.getLastRow() === 0) {
-    hv.getRange(1, 1, 1, COLUMNAS_VENTAS.length).setValues([COLUMNAS_VENTAS])
-      .setFontWeight('bold').setBackground('#146B52').setFontColor('#FFFFFF');
-    hv.setFrozenRows(1);
+  const hp = libro.getSheetByName(HOJA_PRODUCTOS);
+  if (hp.getLastRow() < 2) {
+    const ahora = new Date().toISOString();
+    const filas = PRODUCTOS_INICIALES.map(function (p, i) {
+      return ['p' + Date.now() + '-' + i, p[0], p[1], p[2], p[3], ahora];
+    });
+    hp.getRange(2, 1, filas.length, COL_PRODUCTOS.length).setValues(filas);
+    hp.getRange(2, 3, filas.length, 1).setNumberFormat('$#,##0');
   }
 
   carpetaFotos();
-  // No usamos getUi().alert: el diálogo aparece en la pestaña de la hoja y
-  // deja la ejecución colgada esperando un clic que el usuario no ve.
-  Logger.log('Listo. Las hojas FIGURAS y VENTAS están preparadas.');
+  Logger.log('Listo. Hojas MOLDES, PIEZAS, PRODUCTOS y VENTAS preparadas.');
+}
+
+
+function crearHoja(libro, nombre, columnas, color) {
+  let h = libro.getSheetByName(nombre);
+  if (!h) h = libro.insertSheet(nombre);
+  // Siempre se reescriben: así una columna nueva queda con su título.
+  h.getRange(1, 1, 1, columnas.length).setValues([columnas])
+    .setFontWeight('bold').setBackground(color).setFontColor('#FFFFFF');
+  h.setFrozenRows(1);
+  return h;
+}
+
+
+function hoja(nombre) {
+  const h = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nombre);
+  if (!h) throw new Error('Falta la hoja ' + nombre + '. Ejecute prepararHoja() una vez.');
+  return h;
 }
 
 
@@ -61,26 +92,182 @@ function carpetaFotos() {
 
 
 /* ══════════════════════════════════════════════════════════════
-   CARGA MASIVA DESDE UNA CARPETA DE DRIVE
-
-   Suba su carpeta de fotos a Drive tal como la tiene en el computador,
-   escriba aquí abajo su nombre exacto, y ejecute importarDesdeCarpeta()
-   una sola vez desde el editor.
-
-   Lee el nombre de cada archivo ("ABEJA MIEL FLOR NIÑA.jpg") y crea la
-   figura con nombre, categoría, palabras de búsqueda y foto ya puestas.
-   Ejecutarlo dos veces no duplica: salta las que ya estén en la hoja.
+   LECTURA Y ESCRITURA GENÉRICAS
    ══════════════════════════════════════════════════════════════ */
 
-const CARPETA_ORIGEN = 'FILEMON MOLDES';
+function leerTabla(nombreHoja, columnas, numericas) {
+  const h = hoja(nombreHoja);
+  if (h.getLastRow() < 2) return [];
+  return h.getRange(2, 1, h.getLastRow() - 1, columnas.length).getValues()
+    .filter(function (f) { return f[0]; })
+    .map(function (f) {
+      const o = {};
+      columnas.forEach(function (c, i) { o[c] = f[i]; });
+      (numericas || []).forEach(function (k) { o[k] = Number(o[k]) || 0; });
+      if (o.actualizado) o.actualizado = new Date(o.actualizado).toISOString();
+      return o;
+    });
+}
+
+function buscarFila(h, id) {
+  if (h.getLastRow() < 2) return 0;
+  const ids = h.getRange(2, 1, h.getLastRow() - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(id)) return i + 2;
+  }
+  return 0;
+}
+
+function guardarEn(nombreHoja, columnas, obj) {
+  const h = hoja(nombreHoja);
+  obj.actualizado = new Date().toISOString();
+  const fila = columnas.map(function (c) { return obj[c] !== undefined ? obj[c] : ''; });
+  const n = buscarFila(h, obj.id);
+  if (n) h.getRange(n, 1, 1, columnas.length).setValues([fila]);
+  else h.appendRow(fila);
+  return obj;
+}
+
+function eliminarEn(nombreHoja, id) {
+  const h = hoja(nombreHoja);
+  const n = buscarFila(h, id);
+  if (n) h.deleteRow(n);
+  return !!n;
+}
+
+function leerMoldes()    { return leerTabla(HOJA_MOLDES, COL_MOLDES, ['cavidades','dias','giro']); }
+function leerPiezas()    { return leerTabla(HOJA_PIEZAS, COL_PIEZAS, ['numero','existencia','minimo']); }
+function leerProductos() { return leerTabla(HOJA_PRODUCTOS, COL_PRODUCTOS, ['precio','piezas']); }
+
+function leerVentas() {
+  const h = hoja(HOJA_VENTAS);
+  if (h.getLastRow() < 2) return [];
+  const desde = Math.max(2, h.getLastRow() - 999);
+  return h.getRange(desde, 1, h.getLastRow() - desde + 1, COL_VENTAS.length).getValues()
+    .filter(function (f) { return f[0]; })
+    .map(function (f) {
+      const o = {};
+      COL_VENTAS.forEach(function (c, i) { o[c] = f[i]; });
+      o.fecha = new Date(o.fecha).toISOString();
+      o.precio = Number(o.precio) || 0;
+      o.total = Number(o.total) || 0;
+      return o;
+    });
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   FOTOS Y MOLDES
+   ══════════════════════════════════════════════════════════════ */
+
+function subirFoto(id, base64) {
+  const partes = base64.split(',');
+  const tipo = (partes[0].match(/data:(.*?);/) || [null, 'image/jpeg'])[1];
+  const blob = Utilities.newBlob(Utilities.base64Decode(partes[1]), tipo, id + '.jpg');
+
+  const carpeta = carpetaFotos();
+  const viejos = carpeta.getFilesByName(id + '.jpg');
+  while (viejos.hasNext()) viejos.next().setTrashed(true);
+
+  const archivo = carpeta.createFile(blob);
+  archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return 'https://drive.google.com/thumbnail?id=' + archivo.getId() + '&sz=w600';
+}
+
+
+function guardarMolde(m) {
+  const borrarFoto = !!m.quitarFoto;
+
+  if (m.fotoBase64) {
+    m.foto = subirFoto(m.id, m.fotoBase64);
+  } else if (borrarFoto) {
+    m.foto = '';
+    const carpeta = carpetaFotos();
+    const viejos = carpeta.getFilesByName(m.id + '.jpg');
+    while (viejos.hasNext()) viejos.next().setTrashed(true);
+  }
+  delete m.fotoBase64;
+  delete m.quitarFoto;
+
+  // Sin foto nueva y sin borrado explícito, se conserva la que ya estaba.
+  if (!m.foto && !borrarFoto) {
+    const h = hoja(HOJA_MOLDES);
+    const n = buscarFila(h, m.id);
+    if (n) m.foto = h.getRange(n, COL_MOLDES.indexOf('foto') + 1).getValue();
+  }
+
+  return { molde: guardarEn(HOJA_MOLDES, COL_MOLDES, m) };
+}
+
+
+function eliminarMolde(id) {
+  const eliminado = eliminarEn(HOJA_MOLDES, id);
+
+  // Las piezas de ese molde se van con él: una pieza huérfana no significa nada.
+  const h = hoja(HOJA_PIEZAS);
+  if (h.getLastRow() > 1) {
+    const col = COL_PIEZAS.indexOf('idMolde') + 1;
+    const vals = h.getRange(2, col, h.getLastRow() - 1, 1).getValues();
+    for (var i = vals.length - 1; i >= 0; i--) {
+      if (String(vals[i][0]) === String(id)) h.deleteRow(i + 2);
+    }
+  }
+
+  const carpeta = carpetaFotos();
+  const viejos = carpeta.getFilesByName(id + '.jpg');
+  while (viejos.hasNext()) viejos.next().setTrashed(true);
+
+  return { eliminado: eliminado };
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   VENTAS
+   ══════════════════════════════════════════════════════════════ */
+
+function registrarVenta(v) {
+  const h = hoja(HOJA_PIEZAS);
+  const colExi = COL_PIEZAS.indexOf('existencia') + 1;
+  const detalle = [];
+
+  (v.piezas || []).forEach(function (p) {
+    const n = buscarFila(h, p.id);
+    if (!n) return;
+    const actual = Number(h.getRange(n, colExi).getValue()) || 0;
+    const cantidad = Number(p.cantidad) || 0;
+    h.getRange(n, colExi).setValue(Math.max(0, actual - cantidad));
+    h.getRange(n, COL_PIEZAS.indexOf('actualizado') + 1).setValue(new Date().toISOString());
+    detalle.push(p.nombre + ' x' + cantidad);
+  });
+
+  const precio = Number(v.precio) || 0;
+  const total = Number(v.total) || precio;
+
+  hoja(HOJA_VENTAS).appendRow([
+    new Date(), v.idProducto || '', v.producto || '', precio, total,
+    detalle.join(' · '), v.cliente || '', v.nota || '',
+  ]);
+
+  return { registrada: true };
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   IMPORTAR DESDE UNA CARPETA DE DRIVE
+
+   Suba su carpeta de fotos a Drive con los nombres descriptivos
+   ("ABEJA MIEL FLOR NIÑA.jpg") y ejecute importarDesdeCarpeta().
+   Cada palabra del nombre se vuelve una pieza numerada.
+   ══════════════════════════════════════════════════════════════ */
 
 const VACIAS_GS = ['y','o','de','del','la','el','los','las','un','una','con','en','para','al','a','e'];
 
 const CATEGORIAS_GS = [
   ['Animales', ['abeja','ardilla','conejo','gato','leon','dinosaurio','girafa','jirafa','flamingo','tucan',
                 'pelicano','oso','mariposa','pollito','perro','vaca','elefante','buho','pez','tortuga','caballo',
-                'oveja','pato','rana','koala','panda','zorro','ciervo','erizo','cerdo','raton','unicornio','dragon','sirena']],
-  ['Flores y hojas', ['flor','girasol','rosa','hoja','margarita','tulipan','hongo','planta','cactus']],
+                'oveja','pato','rana','koala','panda','zorro','ciervo','erizo','cerdo','raton','unicornio','dragon',
+                'sirena','zebra','hipopotamo','cocodrilo','papagayo','ave']],
+  ['Flores y hojas', ['flor','girasol','rosa','hoja','margarita','tulipan','hongo','planta','cactus','nuez']],
   ['Transporte', ['carro','moto','bus','helicoptero','avion','tren','barco','camion','bicicleta','tractor']],
   ['Espacio y cielo', ['astronauta','estrella','luna','cohete','planeta','nube','sol','arcoiris']],
   ['Comida', ['dona','miel','fruta','helado','torta','cupcake','pastel','galleta','pizza','taza','cafe']],
@@ -90,6 +277,9 @@ const CATEGORIAS_GS = [
   ['Bebé', ['bebe','biberon','chupo','sonajero','patuco']],
   ['Fechas especiales', ['navidad','halloween','calabaza','arbol','pascua','huevo']],
 ];
+
+const TAMANOS_GS = ['grande','grandes','pequeno','pequenos','pequena','pequenas',
+                    'mediano','medianos','mediana','medianas','mini'];
 
 function limpiarGS(t) {
   return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -113,24 +303,63 @@ function variantesGS(p) {
   return Object.keys(v);
 }
 
+function clavesDeGS(texto) {
+  const claves = {};
+  String(texto || '').split(/\s+/).forEach(function (t) {
+    const n = limpiarGS(t).replace(/[^a-z0-9]/g, '');
+    if (n && VACIAS_GS.indexOf(n) === -1) {
+      variantesGS(n).forEach(function (v) { claves[v] = 1; });
+    }
+  });
+  return Object.keys(claves).join(', ');
+}
+
+/**
+ * Interpreta "ABEJA MIEL FLOR NIÑA.jpg".
+ * Devuelve el nombre del molde, su categoría, el público y las piezas sueltas.
+ */
 function analizarNombreGS(nombreArchivo) {
   const base = nombreArchivo.replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
   const publico = {}, resto = [];
 
-  base.split(/[\/,]|\s+/).filter(String).forEach(function (t) {
+  base.split(/[\/,:]|\s+/).filter(String).forEach(function (t) {
     const n = limpiarGS(t).replace(/[^a-z0-9]/g, '');
     if (!n) return;
     if (/^nin[ao]s?$/.test(n)) publico[n.charAt(3) === 'a' ? 'niña' : 'niño'] = 1;
     else resto.push({ crudo: t, norm: n });
   });
 
-  const claves = {};
+  const titulo = function (s) { return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(); };
+
+  // "Conejo grande y pequeño" son DOS piezas, no una: el tamaño que llega
+  // cuando la pieza anterior ya tiene tamaño abre una pieza nueva.
+  const piezas = [];
+  let nucleo = '', conTamano = false;
   resto.forEach(function (x) {
-    if (VACIAS_GS.indexOf(x.norm) === -1) variantesGS(x.norm).forEach(function (v) { claves[v] = 1; });
+    if (VACIAS_GS.indexOf(x.norm) !== -1) return;
+    if (TAMANOS_GS.indexOf(x.norm) !== -1) {
+      if (!piezas.length) { piezas.push(titulo(x.crudo)); nucleo = titulo(x.crudo); conTamano = true; return; }
+      if (conTamano) piezas.push(nucleo + ' ' + titulo(x.crudo));
+      else { piezas[piezas.length - 1] += ' ' + titulo(x.crudo); conTamano = true; }
+      return;
+    }
+    piezas.push(titulo(x.crudo));
+    nucleo = titulo(x.crudo);
+    conTamano = false;
+  });
+
+  // "Animales", "Frutas": encabezan la lista pero no son una pieza. Se
+  // descartan solo si quedan al menos dos piezas de verdad.
+  const COLECTIVAS = ['animales','frutas','flores','letras','numeros','figuras','surtidos'];
+  if (piezas.length > 2 && COLECTIVAS.indexOf(limpiarGS(piezas[0])) !== -1) piezas.shift();
+
+  const normas = resto.map(function (x) { return x.norm; });
+  const claves = {};
+  normas.forEach(function (n) {
+    if (VACIAS_GS.indexOf(n) === -1) variantesGS(n).forEach(function (v) { claves[v] = 1; });
   });
   Object.keys(publico).forEach(function (p) { claves[p] = 1; claves[limpiarGS(p)] = 1; });
 
-  const normas = resto.map(function (x) { return x.norm; });
   let categoria = 'Sin clasificar', max = 0;
   CATEGORIAS_GS.forEach(function (par) {
     const n = normas.filter(function (p) {
@@ -140,17 +369,16 @@ function analizarNombreGS(nombreArchivo) {
   });
 
   return {
-    nombre: resto.map(function (x) {
-      return x.crudo.charAt(0).toUpperCase() + x.crudo.slice(1).toLowerCase();
-    }).join(' ') || base,
+    nombre: piezas.join(' ') || base,
     categoria: categoria,
     claves: Object.keys(claves).join(', '),
     publico: Object.keys(publico).join(' y '),
+    piezas: piezas,
   };
 }
 
 function codigoGS(nombre, usados) {
-  const raiz = (limpiarGS(nombre).replace(/[^a-z0-9]/g, '').slice(0, 3).toUpperCase()) || 'FIG';
+  const raiz = (limpiarGS(nombre).replace(/[^a-z0-9]/g, '').slice(0, 3).toUpperCase()) || 'MOL';
   let i = 1, c;
   do { c = raiz + '-' + ('0' + i).slice(-2); i++; } while (usados[c]);
   usados[c] = 1;
@@ -165,20 +393,18 @@ function importarDesdeCarpeta() {
                     '". Revise el nombre exacto en la constante CARPETA_ORIGEN.');
   }
   const carpeta = it.next();
-  const h = hoja(HOJA_FIGURAS);
+  const hm = hoja(HOJA_MOLDES);
+  const hp = hoja(HOJA_PIEZAS);
 
   const existentes = {}, usados = {};
-  if (h.getLastRow() > 1) {
-    const previas = h.getRange(2, 1, h.getLastRow() - 1, COLUMNAS.length).getValues();
-    previas.forEach(function (f) {
-      const nom = limpiarGS(f[COLUMNAS.indexOf('nombre')]).replace(/\s+/g, ' ').trim();
-      if (nom) existentes[nom] = 1;
-      if (f[COLUMNAS.indexOf('codigo')]) usados[f[COLUMNAS.indexOf('codigo')]] = 1;
-    });
-  }
+  leerMoldes().forEach(function (m) {
+    const nom = limpiarGS(m.nombre).replace(/\s+/g, ' ').trim();
+    if (nom) existentes[nom] = 1;
+    if (m.codigo) usados[m.codigo] = 1;
+  });
 
-  const nuevas = [];
-  let saltadas = 0, revisados = 0;
+  const nuevosMoldes = [], nuevasPiezas = [];
+  let saltados = 0, revisados = 0;
   const ahora = new Date().toISOString();
   const archivos = carpeta.getFiles();
 
@@ -189,61 +415,75 @@ function importarDesdeCarpeta() {
 
     const d = analizarNombreGS(archivo.getName());
     const clave = limpiarGS(d.nombre).replace(/\s+/g, ' ').trim();
-    if (existentes[clave]) { saltadas++; continue; }
+    if (existentes[clave]) { saltados++; continue; }
     existentes[clave] = 1;
 
     try {
       archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     } catch (err) { /* si ya está compartida o no se puede, seguimos */ }
 
-    const fig = {
-      id: 'f' + Date.now() + '-' + nuevas.length,
+    const idMolde = 'm' + Date.now() + '-' + nuevosMoldes.length;
+    const molde = {
+      id: idMolde,
       codigo: codigoGS(d.nombre, usados),
       nombre: d.nombre,
       categoria: d.categoria,
       claves: d.claves,
       medidas: '',
-      existencia: 0,
-      minimo: 3,
-      precio: 0,
+      cavidades: d.piezas.length,   // provisional: lo confirma quien mire la foto
       dias: 2,
-      molde: 'bueno',
+      estado: 'bueno',
       ubicacion: '',
       notas: d.publico ? 'Para ' + d.publico : '',
       foto: 'https://drive.google.com/thumbnail?id=' + archivo.getId() + '&sz=w600',
+      giro: 0,
       actualizado: ahora,
     };
-    nuevas.push(COLUMNAS.map(function (c) { return fig[c]; }));
+    nuevosMoldes.push(COL_MOLDES.map(function (c) { return molde[c]; }));
+
+    d.piezas.forEach(function (nombrePieza, i) {
+      const pieza = {
+        id: 'z' + Date.now() + '-' + nuevasPiezas.length,
+        idMolde: idMolde,
+        numero: i + 1,
+        nombre: nombrePieza,
+        claves: clavesDeGS(nombrePieza),
+        existencia: 0,
+        minimo: 3,
+        actualizado: ahora,
+      };
+      nuevasPiezas.push(COL_PIEZAS.map(function (c) { return pieza[c]; }));
+    });
   }
 
-  if (nuevas.length) {
-    h.getRange(h.getLastRow() + 1, 1, nuevas.length, COLUMNAS.length).setValues(nuevas);
+  if (nuevosMoldes.length) {
+    hm.getRange(hm.getLastRow() + 1, 1, nuevosMoldes.length, COL_MOLDES.length).setValues(nuevosMoldes);
+  }
+  if (nuevasPiezas.length) {
+    hp.getRange(hp.getLastRow() + 1, 1, nuevasPiezas.length, COL_PIEZAS.length).setValues(nuevasPiezas);
   }
 
   const resumen = revisados + ' imágenes revisadas.\n' +
-                  nuevas.length + ' figuras nuevas agregadas.\n' +
-                  saltadas + ' saltadas porque ya estaban.\n\n' +
-                  'Abra la app y toque el punto de arriba para sincronizar.';
+                  nuevosMoldes.length + ' moldes nuevos.\n' +
+                  nuevasPiezas.length + ' piezas creadas.\n' +
+                  saltados + ' saltados porque ya estaban.\n\n' +
+                  'Revise en la app que el número de cada pieza coincida con la foto.';
   Logger.log(resumen);
   return resumen;
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   REPORTE MENSUAL Y DE TEMPORADA
-
-   Ejecute generarReporte() desde el editor cuando quiera actualizarlo.
-   Arma la pestaña REPORTE. Para tenerlo como archivo:
-     Archivo → Descargar → Microsoft Excel  (o Documento PDF)
+   REPORTE
    ══════════════════════════════════════════════════════════════ */
 
-const HOJA_REPORTE = 'REPORTE';
 const MESES_LARGO_GS = ['enero','febrero','marzo','abril','mayo','junio','julio',
                         'agosto','septiembre','octubre','noviembre','diciembre'];
 
 function generarReporte() {
   const libro = SpreadsheetApp.getActiveSpreadsheet();
-  const figuras = leerFiguras();
+  const moldes = leerMoldes();
+  const piezas = leerPiezas();
   const ventas = leerVentas();
 
   let r = libro.getSheetByName(HOJA_REPORTE);
@@ -251,9 +491,7 @@ function generarReporte() {
   r.clear();
 
   const hoy = new Date();
-  const filas = [];
-  const titulos = [];   // filas que van en negrita
-  const monedas = [];   // filas cuya columna C es dinero
+  const filas = [], titulos = [], monedas = [];
 
   const seccion = function (t) {
     filas.push(['', '', '', '']);
@@ -266,115 +504,106 @@ function generarReporte() {
   filas.push(['Generado el ' + hoy.getDate() + ' de ' + MESES_LARGO_GS[hoy.getMonth()] +
               ' de ' + hoy.getFullYear(), '', '', '']);
 
-  /* ── resumen ── */
-  const listas = figuras.filter(function (f) {
-    return f.molde === 'bueno' && Number(f.existencia) > 0;
+  const porMolde = {};
+  moldes.forEach(function (m) { porMolde[m.id] = m; });
+  const cuentaPiezas = {};
+  piezas.forEach(function (p) { cuentaPiezas[p.idMolde] = (cuentaPiezas[p.idMolde] || 0) + 1; });
+
+  const utiles = piezas.filter(function (p) {
+    const m = porMolde[p.idMolde];
+    return m && m.estado === 'bueno';
   });
-  const piezas = listas.reduce(function (s, f) { return s + Number(f.existencia); }, 0);
-  const valor = listas.reduce(function (s, f) { return s + Number(f.existencia) * Number(f.precio); }, 0);
+  const enBodega = utiles.reduce(function (s, p) { return s + Number(p.existencia); }, 0);
+  const sinNombre = piezas.filter(function (p) { return !String(p.nombre || '').trim(); }).length;
+  const incompletos = moldes.filter(function (m) {
+    return Number(m.cavidades) > (cuentaPiezas[m.id] || 0);
+  });
 
   seccion('RESUMEN');
-  filas.push(['Figuras registradas', figuras.length, '', '']);
-  filas.push(['Piezas listas en bodega', piezas, '', '']);
-  filas.push(['Valor de lo que está listo', valor, '', '']);
-  monedas.push(filas.length + 1);
-  filas.push(['Moldes dañados', figuras.filter(function (f) { return f.molde === 'danado'; }).length, '', '']);
+  filas.push(['Moldes registrados', moldes.length, '', '']);
+  filas.push(['Piezas distintas', piezas.length, '', '']);
+  filas.push(['Piezas en bodega', enBodega, '', '']);
+  filas.push(['Piezas sin nombre', sinNombre, '', '']);
+  filas.push(['Moldes con piezas por registrar', incompletos.length, '', '']);
+  filas.push(['Moldes dañados', moldes.filter(function (m) { return m.estado === 'danado'; }).length, '', '']);
   filas.push(['Ventas registradas', ventas.length, '', '']);
 
-  /* ── mes a mes ── */
   seccion('VENTAS MES A MES');
   titulos.push(filas.length + 2);
-  filas.push(['Mes', 'Unidades', 'Ingresos', '']);
+  filas.push(['Mes', 'Ventas', 'Ingresos', '']);
 
   const porMes = {};
   ventas.forEach(function (v) {
     const d = new Date(v.fecha);
     const k = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
-    if (!porMes[k]) porMes[k] = { u: 0, i: 0 };
-    porMes[k].u += Number(v.cantidad) || 0;
+    if (!porMes[k]) porMes[k] = { n: 0, i: 0 };
+    porMes[k].n++;
     porMes[k].i += Number(v.total) || 0;
   });
   const claves = Object.keys(porMes).sort();
   if (!claves.length) filas.push(['Sin ventas registradas todavía', '', '', '']);
   claves.forEach(function (k) {
-    filas.push([k, porMes[k].u, porMes[k].i, '']);
+    filas.push([k, porMes[k].n, porMes[k].i, '']);
     monedas.push(filas.length + 1);
   });
 
-  /* ── temporada ── */
   seccion('MESES FUERTES (TEMPORADA)');
   titulos.push(filas.length + 2);
-  filas.push(['Mes del año', 'Unidades', 'Ingresos', 'Años con datos']);
+  filas.push(['Mes del año', 'Ventas', 'Ingresos', 'Años con datos']);
 
-  const porEstacion = MESES_LARGO_GS.map(function () { return { u: 0, i: 0, años: {} }; });
+  const est = MESES_LARGO_GS.map(function () { return { n: 0, i: 0, anios: {} }; });
   ventas.forEach(function (v) {
     const d = new Date(v.fecha);
-    const e = porEstacion[d.getMonth()];
-    e.u += Number(v.cantidad) || 0;
+    const e = est[d.getMonth()];
+    e.n++;
     e.i += Number(v.total) || 0;
-    e.años[d.getFullYear()] = 1;
+    e.anios[d.getFullYear()] = 1;
   });
-  const conDatos = porEstacion
-    .map(function (e, i) { return { mes: MESES_LARGO_GS[i], u: e.u, i: e.i, n: Object.keys(e.años).length }; })
-    .filter(function (e) { return e.u > 0; })
-    .sort(function (a, b) { return b.u - a.u; });
+  const conDatos = est
+    .map(function (e, i) { return { mes: MESES_LARGO_GS[i], n: e.n, i: e.i, a: Object.keys(e.anios).length }; })
+    .filter(function (e) { return e.n > 0; })
+    .sort(function (a, b) { return b.n - a.n; });
 
   if (!conDatos.length) {
     filas.push(['Se necesita al menos un año de ventas para hablar de temporada', '', '', '']);
   } else {
     conDatos.forEach(function (e) {
-      filas.push([e.mes, e.u, e.i, e.n]);
+      filas.push([e.mes, e.n, e.i, e.a]);
       monedas.push(filas.length + 1);
     });
-    const variosAños = conDatos.some(function (e) { return e.n > 1; });
-    filas.push([variosAños
+    filas.push([conDatos.some(function (e) { return e.a > 1; })
       ? 'Con más de un año de datos, esta tabla ya indica temporada.'
       : 'Menos de un año de historia: muestra lo vendido, no una temporada confirmada.', '', '', '']);
   }
 
-  /* ── más vendidas ── */
-  seccion('FIGURAS MÁS VENDIDAS');
+  seccion('PIEZAS POR REPONER');
   titulos.push(filas.length + 2);
-  filas.push(['Figura', 'Código', 'Unidades', 'Ingresos']);
+  filas.push(['Pieza', 'Molde', 'En bodega', 'Avisar en']);
 
-  const porFigura = {};
-  ventas.forEach(function (v) {
-    const k = String(v.id);
-    if (!porFigura[k]) porFigura[k] = { nombre: v.nombre, codigo: v.codigo, u: 0, i: 0 };
-    porFigura[k].u += Number(v.cantidad) || 0;
-    porFigura[k].i += Number(v.total) || 0;
-  });
-  const ranking = Object.keys(porFigura).map(function (k) { return porFigura[k]; })
-    .sort(function (a, b) { return b.u - a.u; }).slice(0, 25);
-  if (!ranking.length) filas.push(['Sin ventas registradas todavía', '', '', '']);
-  ranking.forEach(function (t) {
-    filas.push([t.nombre, t.codigo, t.u, t.i]);
-  });
-
-  /* ── por reponer ── */
-  seccion('POR REPONER');
-  titulos.push(filas.length + 2);
-  filas.push(['Figura', 'En bodega', 'Avisar en', 'Días de producción']);
-
-  const bajas = figuras.filter(function (f) {
-    const min = (f.minimo === 0 || Number(f.minimo)) ? Number(f.minimo) : 3;
-    return f.molde === 'bueno' && Number(f.existencia) > 0 && Number(f.existencia) <= min;
+  const bajas = utiles.filter(function (p) {
+    return Number(p.existencia) > 0 && Number(p.existencia) <= Number(p.minimo);
   });
   if (!bajas.length) filas.push(['Nada por reponer', '', '', '']);
-  bajas.forEach(function (f) {
-    filas.push([f.nombre, Number(f.existencia), Number(f.minimo), Number(f.dias)]);
+  bajas.forEach(function (p) {
+    const m = porMolde[p.idMolde] || {};
+    filas.push([p.nombre, (m.codigo || '') + ' · pieza ' + p.numero, Number(p.existencia), Number(p.minimo)]);
   });
 
-  /* ── volcado y formato ── */
+  seccion('MOLDES CON PIEZAS SIN REGISTRAR');
+  titulos.push(filas.length + 2);
+  filas.push(['Molde', 'Código', 'Cavidades', 'Piezas registradas']);
+
+  if (!incompletos.length) filas.push(['Todos los moldes tienen sus piezas registradas', '', '', '']);
+  incompletos.forEach(function (m) {
+    filas.push([m.nombre, m.codigo, Number(m.cavidades), cuentaPiezas[m.id] || 0]);
+  });
+
   r.getRange(1, 1, filas.length, 4).setValues(filas);
   r.getRange(1, 1, 1, 4).setFontSize(14);
   titulos.forEach(function (n) {
     r.getRange(n, 1, 1, 4).setFontWeight('bold').setBackground('#EDEDE7');
   });
-  monedas.forEach(function (n) {
-    r.getRange(n, 3).setNumberFormat('$#,##0');
-  });
-  r.getRange(6, 2).setNumberFormat('$#,##0');   // valor del inventario
+  monedas.forEach(function (n) { r.getRange(n, 3).setNumberFormat('$#,##0'); });
   r.setColumnWidth(1, 320);
   r.setColumnWidths(2, 3, 130);
   r.setFrozenRows(1);
@@ -386,6 +615,10 @@ function generarReporte() {
   return resumen;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   PUENTE CON LA APP
+   ══════════════════════════════════════════════════════════════ */
 
 function doPost(e) {
   const salida = ContentService.createTextOutput();
@@ -407,8 +640,7 @@ function doPost(e) {
   const candado = LockService.getScriptLock();
   try {
     candado.waitLock(20000);
-    const datos = despachar(peticion.accion, peticion.datos || {});
-    salida.setContent(JSON.stringify({ ok: true, datos: datos }));
+    salida.setContent(JSON.stringify({ ok: true, datos: despachar(peticion.accion, peticion.datos || {}) }));
   } catch (err) {
     salida.setContent(JSON.stringify({ ok: false, error: String(err && err.message || err) }));
   } finally {
@@ -427,149 +659,18 @@ function doGet() {
 
 function despachar(accion, datos) {
   switch (accion) {
-    case 'leer':     return { figuras: leerFiguras(), ventas: leerVentas() };
-    case 'guardar':  return guardarFigura(datos);
-    case 'eliminar': return eliminarFigura(datos.id);
-    case 'venta':    return registrarVenta(datos);
-    case 'importar': return importar(datos.figuras || []);
+    case 'leer':
+      return {
+        moldes: leerMoldes(), piezas: leerPiezas(),
+        productos: leerProductos(), ventas: leerVentas(),
+      };
+    case 'guardarMolde':     return guardarMolde(datos);
+    case 'eliminarMolde':    return eliminarMolde(datos.id);
+    case 'guardarPieza':     return { pieza: guardarEn(HOJA_PIEZAS, COL_PIEZAS, datos) };
+    case 'eliminarPieza':    return { eliminado: eliminarEn(HOJA_PIEZAS, datos.id) };
+    case 'guardarProducto':  return { producto: guardarEn(HOJA_PRODUCTOS, COL_PRODUCTOS, datos) };
+    case 'eliminarProducto': return { eliminado: eliminarEn(HOJA_PRODUCTOS, datos.id) };
+    case 'venta':            return registrarVenta(datos);
     default: throw new Error('Acción desconocida: ' + accion);
   }
-}
-
-
-function hoja(nombre) {
-  const h = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nombre);
-  if (!h) throw new Error('Falta la hoja ' + nombre + '. Ejecute prepararHoja() una vez.');
-  return h;
-}
-
-
-function leerFiguras() {
-  const h = hoja(HOJA_FIGURAS);
-  if (h.getLastRow() < 2) return [];
-  const filas = h.getRange(2, 1, h.getLastRow() - 1, COLUMNAS.length).getValues();
-  return filas
-    .filter(function (f) { return f[0]; })
-    .map(function (f) {
-      const o = {};
-      COLUMNAS.forEach(function (c, i) { o[c] = f[i]; });
-      ['existencia', 'minimo', 'precio', 'dias'].forEach(function (k) { o[k] = Number(o[k]) || 0; });
-      o.actualizado = o.actualizado ? new Date(o.actualizado).toISOString() : '';
-      return o;
-    });
-}
-
-
-function leerVentas() {
-  const h = hoja(HOJA_VENTAS);
-  if (h.getLastRow() < 2) return [];
-  const desde = Math.max(2, h.getLastRow() - 999);
-  const n = h.getLastRow() - desde + 1;
-  const filas = h.getRange(desde, 1, n, COLUMNAS_VENTAS.length).getValues();
-  return filas
-    .filter(function (f) { return f[0]; })
-    .map(function (f) {
-      const o = {};
-      COLUMNAS_VENTAS.forEach(function (c, i) { o[c] = f[i]; });
-      o.fecha = new Date(o.fecha).toISOString();
-      o.cantidad = Number(o.cantidad) || 0;
-      o.total = Number(o.total) || 0;
-      return o;
-    });
-}
-
-
-function buscarFila(h, id) {
-  if (h.getLastRow() < 2) return 0;
-  const ids = h.getRange(2, 1, h.getLastRow() - 1, 1).getValues();
-  for (var i = 0; i < ids.length; i++) {
-    if (String(ids[i][0]) === String(id)) return i + 2;
-  }
-  return 0;
-}
-
-
-function subirFoto(id, base64) {
-  const partes = base64.split(',');
-  const tipo = (partes[0].match(/data:(.*?);/) || [null, 'image/jpeg'])[1];
-  const blob = Utilities.newBlob(Utilities.base64Decode(partes[1]), tipo, id + '.jpg');
-
-  const carpeta = carpetaFotos();
-  const viejos = carpeta.getFilesByName(id + '.jpg');
-  while (viejos.hasNext()) viejos.next().setTrashed(true);
-
-  const archivo = carpeta.createFile(blob);
-  archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return 'https://drive.google.com/thumbnail?id=' + archivo.getId() + '&sz=w600';
-}
-
-
-function guardarFigura(f) {
-  const h = hoja(HOJA_FIGURAS);
-  const borrarFoto = !!f.quitarFoto;
-
-  if (f.fotoBase64) {
-    f.foto = subirFoto(f.id, f.fotoBase64);
-  } else if (borrarFoto) {
-    f.foto = '';
-    const carpeta = carpetaFotos();
-    const viejos = carpeta.getFilesByName(f.id + '.jpg');
-    while (viejos.hasNext()) viejos.next().setTrashed(true);
-  }
-  delete f.fotoBase64;
-  delete f.quitarFoto;
-
-  f.actualizado = new Date().toISOString();
-  const fila = COLUMNAS.map(function (c) { return f[c] !== undefined ? f[c] : ''; });
-
-  const n = buscarFila(h, f.id);
-  if (n) {
-    const previo = h.getRange(n, 1, 1, COLUMNAS.length).getValues()[0];
-    if (!f.foto && !borrarFoto) fila[COLUMNAS.indexOf('foto')] = previo[COLUMNAS.indexOf('foto')];
-    h.getRange(n, 1, 1, COLUMNAS.length).setValues([fila]);
-  } else {
-    h.appendRow(fila);
-  }
-  return { figura: f };
-}
-
-
-function eliminarFigura(id) {
-  const h = hoja(HOJA_FIGURAS);
-  const n = buscarFila(h, id);
-  if (n) h.deleteRow(n);
-
-  const carpeta = carpetaFotos();
-  const viejos = carpeta.getFilesByName(id + '.jpg');
-  while (viejos.hasNext()) viejos.next().setTrashed(true);
-
-  return { eliminado: !!n };
-}
-
-
-function registrarVenta(v) {
-  const hf = hoja(HOJA_FIGURAS);
-  const n = buscarFila(hf, v.id);
-  if (!n) throw new Error('Esa figura ya no existe en la hoja');
-
-  const colExi = COLUMNAS.indexOf('existencia') + 1;
-  const actual = Number(hf.getRange(n, colExi).getValue()) || 0;
-  const cantidad = Number(v.cantidad) || 0;
-  hf.getRange(n, colExi).setValue(Math.max(0, actual - cantidad));
-  hf.getRange(n, COLUMNAS.indexOf('actualizado') + 1).setValue(new Date().toISOString());
-
-  const precio = Number(v.precio) || 0;
-  hoja(HOJA_VENTAS).appendRow([
-    new Date(), v.id, v.codigo || '', v.nombre || '',
-    cantidad, precio, cantidad * precio, v.cliente || '', v.nota || ''
-  ]);
-
-  return { existencia: Math.max(0, actual - cantidad) };
-}
-
-
-function importar(figuras) {
-  var guardadas = 0;
-  figuras.forEach(function (f) { guardarFigura(f); guardadas++; });
-  return { guardadas: guardadas };
 }
