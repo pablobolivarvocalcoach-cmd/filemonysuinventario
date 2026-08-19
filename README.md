@@ -150,6 +150,76 @@ README.md               Este archivo.
 
 ---
 
+## Cargar el catálogo de una vez
+
+Si tiene las fotos nombradas de forma descriptiva (`ABEJA MIEL FLOR NIÑA.jpg`),
+use el menú ··· → **Importar desde las fotos**. Lee los nombres y crea las
+figuras con el nombre, la categoría y las palabras de búsqueda ya puestas.
+Revise la lista antes de confirmar; las que ya tenga aparecen desmarcadas.
+
+Ojo: los colores de etiqueta de Finder no se pueden leer desde el navegador.
+Si esos colores significan algo (por ejemplo, molde dañado), márquelo dentro
+de la app o escríbalo en el nombre del archivo.
+
+---
+
+## Cargar las 100 fotos de una vez (desde Drive)
+
+Más rápido y más seguro que subirlas desde el celular.
+
+1. En Drive, cree una carpeta y suba ahí su carpeta de fotos tal como la tiene
+   en el computador (arrastrar y soltar). El nombre de cada archivo debe seguir
+   siendo descriptivo: `ABEJA MIEL FLOR NIÑA.jpg`.
+2. En el editor de Apps Script, en la constante `CARPETA_ORIGEN` (arriba de
+   `importarDesdeCarpeta`), escriba el nombre exacto de esa carpeta.
+3. Guarde, elija la función **importarDesdeCarpeta** y presione **Ejecutar**.
+4. Al terminar le muestra cuántas agregó y cuántas saltó por estar repetidas.
+5. Abra la app y toque el punto de arriba para sincronizar.
+
+Ejecutarlo dos veces no duplica nada: compara los nombres y salta las que ya
+estén. Puede volver a correrlo cada vez que agregue moldes nuevos a la carpeta.
+
+Las fotos se quedan donde están, en su Drive. El script solo las marca como
+visibles por enlace y guarda la dirección en la hoja.
+
+---
+
+## Quién actualiza qué
+
+**Las ventas y las existencias, desde la app.** Registrar una venta descuenta
+la pieza y deja la fila en la pestaña VENTAS. Su esposa puede usar la misma
+página desde su celular: le pasa la dirección, la URL `/exec` y la clave.
+
+**Si prefiere escribir directo en la hoja**, cambie la columna `existencia` en
+la pestaña FIGURAS. La app lo recoge al sincronizar. Hágalo solo cuando el
+punto de la app esté verde: si hay cambios pendientes por subir, el último en
+sincronizar gana y se pierde el ajuste del otro.
+
+---
+
+## Reportes
+
+**Desde el celular** — menú ··· → *Ventas por mes, Excel y PDF*:
+
+- Barras de los últimos 12 meses, con el mes pico resaltado.
+- **Inventario completo** y **Historial de ventas** se descargan como CSV y se
+  abren en Excel con doble clic (van con punto y coma y codificación UTF-8, que
+  es lo que espera Excel en español).
+- **Generar reporte** abre la ventana de impresión: elija *Guardar como PDF*.
+
+**Desde la hoja, para el análisis de temporada** — en Apps Script ejecute
+`generarReporte()`. Arma la pestaña REPORTE con el resumen, las ventas mes a
+mes, los meses fuertes con todos los años sumados, las figuras más vendidas y
+lo que hay por reponer. Para guardarlo: *Archivo → Descargar → Microsoft Excel*
+o *Documento PDF*.
+
+Con menos de un año de ventas el reporte lo advierte: muestra lo vendido, pero
+no lo llama temporada. Para acortar esa espera puede escribir a mano las ventas
+que recuerde de meses pasados en la pestaña VENTAS (fecha, código, figura,
+cantidad, precio, total). Con eso el análisis arranca con historia.
+
+---
+
 ## Antes de publicar
 
 ```bash

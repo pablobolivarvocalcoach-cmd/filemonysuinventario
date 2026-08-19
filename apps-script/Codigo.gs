@@ -61,6 +61,335 @@ function carpetaFotos() {
 }
 
 
+/* ══════════════════════════════════════════════════════════════
+   CARGA MASIVA DESDE UNA CARPETA DE DRIVE
+
+   Suba su carpeta de fotos a Drive tal como la tiene en el computador,
+   escriba aquí abajo su nombre exacto, y ejecute importarDesdeCarpeta()
+   una sola vez desde el editor.
+
+   Lee el nombre de cada archivo ("ABEJA MIEL FLOR NIÑA.jpg") y crea la
+   figura con nombre, categoría, palabras de búsqueda y foto ya puestas.
+   Ejecutarlo dos veces no duplica: salta las que ya estén en la hoja.
+   ══════════════════════════════════════════════════════════════ */
+
+const CARPETA_ORIGEN = 'FILEMON MOLDES';
+
+const VACIAS_GS = ['y','o','de','del','la','el','los','las','un','una','con','en','para','al','a','e'];
+
+const CATEGORIAS_GS = [
+  ['Animales', ['abeja','ardilla','conejo','gato','leon','dinosaurio','girafa','jirafa','flamingo','tucan',
+                'pelicano','oso','mariposa','pollito','perro','vaca','elefante','buho','pez','tortuga','caballo',
+                'oveja','pato','rana','koala','panda','zorro','ciervo','erizo','cerdo','raton','unicornio','dragon','sirena']],
+  ['Flores y hojas', ['flor','girasol','rosa','hoja','margarita','tulipan','hongo','planta','cactus']],
+  ['Transporte', ['carro','moto','bus','helicoptero','avion','tren','barco','camion','bicicleta','tractor']],
+  ['Espacio y cielo', ['astronauta','estrella','luna','cohete','planeta','nube','sol','arcoiris']],
+  ['Comida', ['dona','miel','fruta','helado','torta','cupcake','pastel','galleta','pizza','taza','cafe']],
+  ['Corazones y amor', ['corazon','amor','beso','labio']],
+  ['Casas', ['casita','casa','castillo','iglesia']],
+  ['Letras y números', ['letra','numero','abecedario','inicial']],
+  ['Bebé', ['bebe','biberon','chupo','sonajero','patuco']],
+  ['Fechas especiales', ['navidad','halloween','calabaza','arbol','pascua','huevo']],
+];
+
+function limpiarGS(t) {
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function variantesGS(p) {
+  const v = {};
+  v[p] = 1;
+  if (p.length > 4 && p.slice(-2) === 'es') v[p.slice(0, -2)] = 1;
+  else if (p.length > 3 && p.slice(-1) === 's') v[p.slice(0, -1)] = 1;
+  else v[p + (/[aeiou]$/.test(p) ? 's' : 'es')] = 1;
+
+  Object.keys(v).forEach(function (b) {
+    const m = b.match(/^(.+)(it[ao])s?$/);
+    if (m && m[1].length > 2) v[m[1] + (m[2] === 'ita' ? 'a' : 'o')] = 1;
+    else if (/[ao]$/.test(b) && b.length > 3) {
+      const r = b.slice(0, -1);
+      v[(r.slice(-1) === 'i' ? r.slice(0, -1) : r) + (b.slice(-1) === 'a' ? 'ita' : 'ito')] = 1;
+    }
+  });
+  return Object.keys(v);
+}
+
+function analizarNombreGS(nombreArchivo) {
+  const base = nombreArchivo.replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const publico = {}, resto = [];
+
+  base.split(/[\/,]|\s+/).filter(String).forEach(function (t) {
+    const n = limpiarGS(t).replace(/[^a-z0-9]/g, '');
+    if (!n) return;
+    if (/^nin[ao]s?$/.test(n)) publico[n.charAt(3) === 'a' ? 'niña' : 'niño'] = 1;
+    else resto.push({ crudo: t, norm: n });
+  });
+
+  const claves = {};
+  resto.forEach(function (x) {
+    if (VACIAS_GS.indexOf(x.norm) === -1) variantesGS(x.norm).forEach(function (v) { claves[v] = 1; });
+  });
+  Object.keys(publico).forEach(function (p) { claves[p] = 1; claves[limpiarGS(p)] = 1; });
+
+  const normas = resto.map(function (x) { return x.norm; });
+  let categoria = 'Sin clasificar', max = 0;
+  CATEGORIAS_GS.forEach(function (par) {
+    const n = normas.filter(function (p) {
+      return par[1].some(function (c) { return p === c || p === c + 's' || p === c + 'es'; });
+    }).length;
+    if (n > max) { max = n; categoria = par[0]; }
+  });
+
+  return {
+    nombre: resto.map(function (x) {
+      return x.crudo.charAt(0).toUpperCase() + x.crudo.slice(1).toLowerCase();
+    }).join(' ') || base,
+    categoria: categoria,
+    claves: Object.keys(claves).join(', '),
+    publico: Object.keys(publico).join(' y '),
+  };
+}
+
+function codigoGS(nombre, usados) {
+  const raiz = (limpiarGS(nombre).replace(/[^a-z0-9]/g, '').slice(0, 3).toUpperCase()) || 'FIG';
+  let i = 1, c;
+  do { c = raiz + '-' + ('0' + i).slice(-2); i++; } while (usados[c]);
+  usados[c] = 1;
+  return c;
+}
+
+
+function importarDesdeCarpeta() {
+  const it = DriveApp.getFoldersByName(CARPETA_ORIGEN);
+  if (!it.hasNext()) {
+    throw new Error('No encontré en Drive una carpeta llamada "' + CARPETA_ORIGEN +
+                    '". Revise el nombre exacto en la constante CARPETA_ORIGEN.');
+  }
+  const carpeta = it.next();
+  const h = hoja(HOJA_FIGURAS);
+
+  const existentes = {}, usados = {};
+  if (h.getLastRow() > 1) {
+    const previas = h.getRange(2, 1, h.getLastRow() - 1, COLUMNAS.length).getValues();
+    previas.forEach(function (f) {
+      const nom = limpiarGS(f[COLUMNAS.indexOf('nombre')]).replace(/\s+/g, ' ').trim();
+      if (nom) existentes[nom] = 1;
+      if (f[COLUMNAS.indexOf('codigo')]) usados[f[COLUMNAS.indexOf('codigo')]] = 1;
+    });
+  }
+
+  const nuevas = [];
+  let saltadas = 0, revisados = 0;
+  const ahora = new Date().toISOString();
+  const archivos = carpeta.getFiles();
+
+  while (archivos.hasNext()) {
+    const archivo = archivos.next();
+    if (archivo.getMimeType().indexOf('image/') !== 0) continue;
+    revisados++;
+
+    const d = analizarNombreGS(archivo.getName());
+    const clave = limpiarGS(d.nombre).replace(/\s+/g, ' ').trim();
+    if (existentes[clave]) { saltadas++; continue; }
+    existentes[clave] = 1;
+
+    try {
+      archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (err) { /* si ya está compartida o no se puede, seguimos */ }
+
+    const fig = {
+      id: 'f' + Date.now() + '-' + nuevas.length,
+      codigo: codigoGS(d.nombre, usados),
+      nombre: d.nombre,
+      categoria: d.categoria,
+      claves: d.claves,
+      medidas: '',
+      existencia: 0,
+      minimo: 3,
+      precio: 0,
+      dias: 2,
+      molde: 'bueno',
+      ubicacion: '',
+      notas: d.publico ? 'Para ' + d.publico : '',
+      foto: 'https://drive.google.com/thumbnail?id=' + archivo.getId() + '&sz=w600',
+      actualizado: ahora,
+    };
+    nuevas.push(COLUMNAS.map(function (c) { return fig[c]; }));
+  }
+
+  if (nuevas.length) {
+    h.getRange(h.getLastRow() + 1, 1, nuevas.length, COLUMNAS.length).setValues(nuevas);
+  }
+
+  const resumen = revisados + ' imágenes revisadas.\n' +
+                  nuevas.length + ' figuras nuevas agregadas.\n' +
+                  saltadas + ' saltadas porque ya estaban.\n\n' +
+                  'Abra la app y toque el punto de arriba para sincronizar.';
+  Logger.log(resumen);
+  try { SpreadsheetApp.getUi().alert(resumen); } catch (err) {}
+  return resumen;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   REPORTE MENSUAL Y DE TEMPORADA
+
+   Ejecute generarReporte() desde el editor cuando quiera actualizarlo.
+   Arma la pestaña REPORTE. Para tenerlo como archivo:
+     Archivo → Descargar → Microsoft Excel  (o Documento PDF)
+   ══════════════════════════════════════════════════════════════ */
+
+const HOJA_REPORTE = 'REPORTE';
+const MESES_LARGO_GS = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                        'agosto','septiembre','octubre','noviembre','diciembre'];
+
+function generarReporte() {
+  const libro = SpreadsheetApp.getActiveSpreadsheet();
+  const figuras = leerFiguras();
+  const ventas = leerVentas();
+
+  let r = libro.getSheetByName(HOJA_REPORTE);
+  if (!r) r = libro.insertSheet(HOJA_REPORTE);
+  r.clear();
+
+  const hoy = new Date();
+  const filas = [];
+  const titulos = [];   // filas que van en negrita
+  const monedas = [];   // filas cuya columna C es dinero
+
+  const seccion = function (t) {
+    filas.push(['', '', '', '']);
+    titulos.push(filas.length + 1);
+    filas.push([t, '', '', '']);
+  };
+
+  filas.push(['FILEMÓN · Reporte de inventario y ventas', '', '', '']);
+  titulos.push(1);
+  filas.push(['Generado el ' + hoy.getDate() + ' de ' + MESES_LARGO_GS[hoy.getMonth()] +
+              ' de ' + hoy.getFullYear(), '', '', '']);
+
+  /* ── resumen ── */
+  const listas = figuras.filter(function (f) {
+    return f.molde === 'bueno' && Number(f.existencia) > 0;
+  });
+  const piezas = listas.reduce(function (s, f) { return s + Number(f.existencia); }, 0);
+  const valor = listas.reduce(function (s, f) { return s + Number(f.existencia) * Number(f.precio); }, 0);
+
+  seccion('RESUMEN');
+  filas.push(['Figuras registradas', figuras.length, '', '']);
+  filas.push(['Piezas listas en bodega', piezas, '', '']);
+  filas.push(['Valor de lo que está listo', valor, '', '']);
+  monedas.push(filas.length + 1);
+  filas.push(['Moldes dañados', figuras.filter(function (f) { return f.molde === 'danado'; }).length, '', '']);
+  filas.push(['Ventas registradas', ventas.length, '', '']);
+
+  /* ── mes a mes ── */
+  seccion('VENTAS MES A MES');
+  titulos.push(filas.length + 2);
+  filas.push(['Mes', 'Unidades', 'Ingresos', '']);
+
+  const porMes = {};
+  ventas.forEach(function (v) {
+    const d = new Date(v.fecha);
+    const k = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+    if (!porMes[k]) porMes[k] = { u: 0, i: 0 };
+    porMes[k].u += Number(v.cantidad) || 0;
+    porMes[k].i += Number(v.total) || 0;
+  });
+  const claves = Object.keys(porMes).sort();
+  if (!claves.length) filas.push(['Sin ventas registradas todavía', '', '', '']);
+  claves.forEach(function (k) {
+    filas.push([k, porMes[k].u, porMes[k].i, '']);
+    monedas.push(filas.length + 1);
+  });
+
+  /* ── temporada ── */
+  seccion('MESES FUERTES (TEMPORADA)');
+  titulos.push(filas.length + 2);
+  filas.push(['Mes del año', 'Unidades', 'Ingresos', 'Años con datos']);
+
+  const porEstacion = MESES_LARGO_GS.map(function () { return { u: 0, i: 0, años: {} }; });
+  ventas.forEach(function (v) {
+    const d = new Date(v.fecha);
+    const e = porEstacion[d.getMonth()];
+    e.u += Number(v.cantidad) || 0;
+    e.i += Number(v.total) || 0;
+    e.años[d.getFullYear()] = 1;
+  });
+  const conDatos = porEstacion
+    .map(function (e, i) { return { mes: MESES_LARGO_GS[i], u: e.u, i: e.i, n: Object.keys(e.años).length }; })
+    .filter(function (e) { return e.u > 0; })
+    .sort(function (a, b) { return b.u - a.u; });
+
+  if (!conDatos.length) {
+    filas.push(['Se necesita al menos un año de ventas para hablar de temporada', '', '', '']);
+  } else {
+    conDatos.forEach(function (e) {
+      filas.push([e.mes, e.u, e.i, e.n]);
+      monedas.push(filas.length + 1);
+    });
+    const variosAños = conDatos.some(function (e) { return e.n > 1; });
+    filas.push([variosAños
+      ? 'Con más de un año de datos, esta tabla ya indica temporada.'
+      : 'Menos de un año de historia: muestra lo vendido, no una temporada confirmada.', '', '', '']);
+  }
+
+  /* ── más vendidas ── */
+  seccion('FIGURAS MÁS VENDIDAS');
+  titulos.push(filas.length + 2);
+  filas.push(['Figura', 'Código', 'Unidades', 'Ingresos']);
+
+  const porFigura = {};
+  ventas.forEach(function (v) {
+    const k = String(v.id);
+    if (!porFigura[k]) porFigura[k] = { nombre: v.nombre, codigo: v.codigo, u: 0, i: 0 };
+    porFigura[k].u += Number(v.cantidad) || 0;
+    porFigura[k].i += Number(v.total) || 0;
+  });
+  const ranking = Object.keys(porFigura).map(function (k) { return porFigura[k]; })
+    .sort(function (a, b) { return b.u - a.u; }).slice(0, 25);
+  if (!ranking.length) filas.push(['Sin ventas registradas todavía', '', '', '']);
+  ranking.forEach(function (t) {
+    filas.push([t.nombre, t.codigo, t.u, t.i]);
+  });
+
+  /* ── por reponer ── */
+  seccion('POR REPONER');
+  titulos.push(filas.length + 2);
+  filas.push(['Figura', 'En bodega', 'Avisar en', 'Días de producción']);
+
+  const bajas = figuras.filter(function (f) {
+    const min = (f.minimo === 0 || Number(f.minimo)) ? Number(f.minimo) : 3;
+    return f.molde === 'bueno' && Number(f.existencia) > 0 && Number(f.existencia) <= min;
+  });
+  if (!bajas.length) filas.push(['Nada por reponer', '', '', '']);
+  bajas.forEach(function (f) {
+    filas.push([f.nombre, Number(f.existencia), Number(f.minimo), Number(f.dias)]);
+  });
+
+  /* ── volcado y formato ── */
+  r.getRange(1, 1, filas.length, 4).setValues(filas);
+  r.getRange(1, 1, 1, 4).setFontSize(14);
+  titulos.forEach(function (n) {
+    r.getRange(n, 1, 1, 4).setFontWeight('bold').setBackground('#EDEDE7');
+  });
+  monedas.forEach(function (n) {
+    r.getRange(n, 3).setNumberFormat('$#,##0');
+  });
+  r.getRange(6, 2).setNumberFormat('$#,##0');   // valor del inventario
+  r.setColumnWidth(1, 320);
+  r.setColumnWidths(2, 3, 130);
+  r.setFrozenRows(1);
+
+  const resumen = 'Reporte actualizado en la pestaña ' + HOJA_REPORTE + '.\n\n' +
+                  'Para guardarlo como archivo:\n' +
+                  'Archivo → Descargar → Microsoft Excel (.xlsx) o Documento PDF (.pdf)';
+  Logger.log(resumen);
+  try { SpreadsheetApp.getUi().alert(resumen); } catch (err) {}
+  return resumen;
+}
+
+
 function doPost(e) {
   const salida = ContentService.createTextOutput();
   salida.setMimeType(ContentService.MimeType.JSON);

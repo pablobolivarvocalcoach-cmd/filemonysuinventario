@@ -148,6 +148,29 @@
   .tarjeta span{font-family:var(--dato);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
                 color:var(--tiza);margin-top:5px;display:block}
 
+  #impresion{ display:none; }
+  @media print{
+    .top, .flotante, .capa, .brindis, #panel, .cuerpo{ display:none !important; }
+    #app{ padding:0; max-width:none; background:#fff; }
+    #impresion{ display:block; padding:0; color:#000; font-size:11pt; }
+    #impresion h1{ font-family:var(--display); font-size:20pt; margin:0 0 2pt; }
+    #impresion h2{ font-family:var(--display); font-size:12pt; margin:16pt 0 5pt;
+                   border-bottom:1pt solid #999; padding-bottom:3pt; }
+    #impresion table{ width:100%; border-collapse:collapse; font-size:9.5pt; }
+    #impresion th{ text-align:left; border-bottom:1pt solid #333; padding:4pt 3pt; font-size:8pt;
+                   text-transform:uppercase; letter-spacing:.05em; }
+    #impresion td{ border-bottom:0.5pt solid #ccc; padding:4pt 3pt; }
+    #impresion .num{ text-align:right; font-variant-numeric:tabular-nums; }
+    #impresion .pie{ margin-top:14pt; font-size:8pt; color:#555; }
+    @page{ margin:14mm; }
+  }
+
+  .barra{ display:flex; align-items:center; gap:9px; margin-bottom:6px; font-size:13px }
+  .barra span:first-child{ flex:0 0 62px; font-family:var(--dato); font-size:11px; color:var(--pizarra-2) }
+  .barra i{ display:block; height:16px; background:var(--tinta); border-radius:1px; min-width:2px }
+  .barra .val{ flex:0 0 auto; font-family:var(--dato); font-size:11px; color:var(--tiza) }
+  .barra.pico i{ background:var(--encargo) }
+
   .brindis{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--pizarra);
            color:#fff;padding:11px 18px;border-radius:3px;font-size:13.5px;z-index:80;
            box-shadow:0 5px 16px rgba(0,0,0,.25);max-width:88%;text-align:center}
@@ -182,6 +205,8 @@
     <div class="conteo" id="conteo"></div>
     <div id="lista"></div>
   </div>
+
+  <div id="impresion"></div>
 
   <div class="flotante">
     <button class="btn btn-mas" id="nueva">+ Figura</button>
@@ -372,7 +397,8 @@ function vendidasDesde(id, dias){
 function coincide(f,q){
   if (!q) return true;
   const bolsa = limpio([f.codigo,f.nombre,f.categoria,f.claves,f.notas].join(' '));
-  return q.split(/\s+/).filter(Boolean).every(p=>bolsa.includes(p));
+  const partes = q.split(/\s+/).filter(p=>p && !VACIAS.has(p) && p !== 'algo' && p !== 'tienes' && p !== 'tiene');
+  return (partes.length ? partes : q.split(/\s+/).filter(Boolean)).every(p=>bolsa.includes(p));
 }
 function visibles(){
   const q = limpio(consulta).trim();
@@ -475,12 +501,215 @@ async function persistir(figura, extra){
   return enviado;
 }
 
+let contadorId = 0;
+function figuraNueva(){
+  return {id:'f'+Date.now()+'-'+(contadorId++), codigo:'', nombre:'', categoria:'', claves:'',
+          medidas:'', existencia:0, minimo:3, precio:0, dias:2, molde:'bueno', ubicacion:'', notas:'', foto:''};
+}
+
+/* ══════════ leer los nombres de archivo ══════════
+   Las fotos vienen nombradas como "ABEJA MIEL FLOR NIÑA.jpg".
+   De ahí salen el nombre, las palabras de búsqueda y el público. */
+
+const CATEGORIAS_CLAVE = [
+  ['Animales', ['abeja','ardilla','conejo','gato','leon','leona','dinosaurio','girafa','jirafa','flamingo','tucan',
+                'pelicano','oso','mariposa','pollito','perro','vaca','elefante','buho','pez','tortuga','caballo',
+                'oveja','pato','rana','koala','panda','zorro','ciervo','erizo','cerdo','raton','unicornio','dragon','sirena']],
+  ['Flores y hojas', ['flor','girasol','rosa','hoja','margarita','tulipan','hongo','planta','cactus']],
+  ['Transporte', ['carro','moto','bus','helicoptero','avion','tren','barco','camion','bicicleta','tractor']],
+  ['Espacio y cielo', ['astronauta','estrella','luna','cohete','planeta','nube','sol','arcoiris']],
+  ['Comida', ['dona','miel','fruta','helado','torta','cupcake','pastel','galleta','pizza','taza','cafe']],
+  ['Corazones y amor', ['corazon','amor','beso','labio']],
+  ['Casas', ['casita','casa','castillo','iglesia']],
+  ['Letras y números', ['letra','numero','abecedario','inicial']],
+  ['Bebé', ['bebe','biberon','chupo','sonajero','patuco']],
+  ['Fechas especiales', ['navidad','halloween','calabaza','arbol','pascua','huevo']],
+];
+
+const VACIAS = new Set(['y','o','de','del','la','el','los','las','un','una','con','en','para','al','a','e']);
+
+function variantes(p){
+  const v = new Set([p]);
+  if (p.length > 4 && p.endsWith('es')) v.add(p.slice(0,-2));
+  else if (p.length > 3 && p.endsWith('s')) v.add(p.slice(0,-1));
+  else v.add(p + (/[aeiou]$/.test(p) ? 's' : 'es'));   // flor→flores, casa→casas
+
+  /* La gente pide en diminutivo: "osito", "conejito", "casita". */
+  v.forEach(b=>{
+    const m = b.match(/^(.+)(it[ao])s?$/);
+    if (m && m[1].length > 2) v.add(m[1] + (m[2] === 'ita' ? 'a' : 'o'));
+    else if (/[ao]$/.test(b) && b.length > 3){
+      const r = b.slice(0,-1);
+      v.add((r.endsWith('i') ? r.slice(0,-1) : r) + (b.endsWith('a') ? 'ita' : 'ito'));
+    }
+  });
+  return v;
+}
+
+function adivinarCategoria(palabras){
+  let mejor = 'Sin clasificar', max = 0;
+  CATEGORIAS_CLAVE.forEach(([cat, claves])=>{
+    const n = palabras.filter(p=>claves.some(c=>p===c || p===c+'s' || p===c+'es')).length;
+    if (n > max){ max = n; mejor = cat; }
+  });
+  return mejor;
+}
+
+function analizarNombre(nombreArchivo){
+  const base = nombreArchivo.replace(/\.[^.]+$/,'').replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();
+  const publico = new Set(), resto = [];
+
+  base.split(/[\/,]|\s+/).filter(Boolean).forEach(t=>{
+    const n = limpio(t).replace(/[^a-z0-9]/g,'');
+    if (!n) return;
+    if (/^nin[ao]s?$/.test(n)) publico.add(n[3] === 'a' ? 'niña' : 'niño');
+    else resto.push({crudo:t, norm:n});
+  });
+
+  const claves = new Set();
+  resto.forEach(x=>{ if (!VACIAS.has(x.norm)) variantes(x.norm).forEach(v=>claves.add(v)); });
+  publico.forEach(p=>{ claves.add(p); claves.add(limpio(p)); });
+
+  return {
+    nombre: resto.map(x=>x.crudo.charAt(0).toUpperCase() + x.crudo.slice(1).toLowerCase()).join(' ') || base,
+    categoria: adivinarCategoria(resto.map(x=>x.norm)),
+    claves: [...claves].join(', '),
+    publico: [...publico].join(' y '),
+  };
+}
+
+function codigoDe(nombre, usados){
+  const raiz = (limpio(nombre).replace(/[^a-z0-9]/g,'').slice(0,3).toUpperCase()) || 'FIG';
+  let i = 1, c;
+  do { c = raiz + '-' + String(i).padStart(2,'0'); i++; } while (usados.has(c));
+  usados.add(c);
+  return c;
+}
+
+function comprimir(archivo, max, calidad){
+  return new Promise((res, rej)=>{
+    const lector = new FileReader();
+    lector.onerror = rej;
+    lector.onload = ()=>{
+      const img = new Image();
+      img.onerror = rej;
+      img.onload = ()=>{
+        const esc = Math.min(1, max/Math.max(img.width, img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width*esc); cv.height = Math.round(img.height*esc);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        res(cv.toDataURL('image/jpeg', calidad));
+      };
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(archivo);
+  });
+}
+
+function abrirImportador(){
+  const conFotos = !!config.url;
+  const capa = abrir(`
+    <div class="hoja-top"><h2>Importar desde las fotos</h2><button class="cerrar">×</button></div>
+    <div class="aviso">
+      Se leen los nombres de sus archivos. <b>ABEJA MIEL FLOR NIÑA.jpg</b> se convierte en una
+      figura con esas cuatro palabras de búsqueda ya cargadas.
+      ${conFotos ? '' : '<br><br>Como todavía no ha conectado su hoja, se importan los nombres <b>sin las fotos</b>. Las fotos las sube después y no pierde este trabajo.'}
+    </div>
+    <button class="btn btn-borde" id="elegir" style="width:100%">Elegir las fotos</button>
+    <input type="file" id="archivos" accept="image/*" multiple style="display:none">
+    <div id="previa"></div>`);
+
+  const h = capa.querySelector('.hoja');
+  h.querySelector('#elegir').addEventListener('click', ()=>h.querySelector('#archivos').click());
+
+  h.querySelector('#archivos').addEventListener('change', ev=>{
+    const archivos = [...(ev.target.files||[])];
+    if (!archivos.length) return;
+
+    const usados = new Set(figuras.map(f=>f.codigo).filter(Boolean));
+    const yaHay = new Set(figuras.map(f=>limpio(f.nombre).replace(/\s+/g,' ').trim()).filter(Boolean));
+    const previa = archivos.map(a=>{
+      const d = analizarNombre(a.name);
+      const repetida = yaHay.has(limpio(d.nombre).replace(/\s+/g,' ').trim());
+      return Object.assign({archivo:a, codigo:codigoDe(d.nombre, usados), incluir:!repetida, repetida:repetida}, d);
+    });
+    const nuevas = previa.filter(p=>!p.repetida).length;
+    const repes  = previa.length - nuevas;
+
+    const cont = h.querySelector('#previa');
+    cont.innerHTML = `
+      <div class="campo" style="margin-top:16px">
+        <label>${previa.length} fotos leídas · ${nuevas} nuevas${repes?` · ${repes} ya registradas`:''}</label>
+        ${repes?`<span class="pista" style="margin:0 0 7px">Las que ya tiene aparecen desmarcadas para no duplicarlas. Nada de lo que ya registró se modifica.</span>`:''}
+        <div id="filas" style="max-height:46vh;overflow-y:auto;border:1px solid var(--linea);border-radius:3px;background:#fff"></div>
+      </div>
+      <div id="avance" class="pista" style="margin-bottom:10px"></div>
+      <div class="acciones" style="margin-top:0">
+        <button class="btn btn-primario" id="importar">Importar ${nuevas}</button>
+      </div>`;
+
+    const filas = cont.querySelector('#filas');
+    const boton = cont.querySelector('#importar');
+    const recontar = ()=>{
+      const n = previa.filter(p=>p.incluir).length;
+      boton.textContent = 'Importar ' + n;
+      boton.disabled = !n;
+    };
+
+    previa.forEach((p, i)=>{
+      const fila = document.createElement('label');
+      fila.style.cssText = 'display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-bottom:1px solid var(--linea);font-size:13.5px;line-height:1.45'
+        + (p.repetida ? ';opacity:.55' : '');
+      fila.innerHTML = `
+        <input type="checkbox" ${p.incluir?'checked':''} data-i="${i}" style="width:auto;margin-top:3px;flex:0 0 auto">
+        <span style="flex:1;min-width:0">
+          <b></b>
+          <span style="display:block;color:var(--tiza);font-size:12px;margin-top:2px"></span>
+        </span>
+        <span class="cod" style="flex:0 0 auto">${esc(p.codigo)}</span>`;
+      fila.querySelector('b').textContent = p.nombre;
+      fila.querySelector('span span').textContent =
+        (p.repetida ? 'Ya registrada · ' : '') + p.categoria + (p.publico ? ' · ' + p.publico : '');
+      fila.querySelector('input').addEventListener('change', e=>{ p.incluir = e.target.checked; recontar(); });
+      filas.appendChild(fila);
+    });
+    recontar();
+
+    boton.addEventListener('click', async ()=>{
+      const sel = previa.filter(p=>p.incluir);
+      if (!sel.length){ brindis('No marcó ninguna.'); return; }
+      boton.disabled = true;
+      const avance = cont.querySelector('#avance');
+
+      let n = 0, fallos = 0;
+      for (const p of sel){
+        avance.textContent = `Importando ${n+1} de ${sel.length}…`;
+        const fig = Object.assign(figuraNueva(), {
+          codigo: p.codigo, nombre: p.nombre, categoria: p.categoria, claves: p.claves,
+          notas: p.publico ? 'Para ' + p.publico : '',
+        });
+        let extra = null;
+        if (conFotos){
+          try { extra = {fotoBase64: await comprimir(p.archivo, 700, 0.72)}; } catch(e){}
+        }
+        figuras.push(fig);
+        const enviado = await encolar('guardar', Object.assign({}, fig, extra||{}));
+        if (!enviado && conFotos){ fallos++; }
+        n++;
+      }
+      await cache.set('figuras', figuras);
+      cerrar(); pintar();
+      if (config.url) await sincronizar(true);
+      brindis(fallos
+        ? `${n} importadas, ${fallos} sin subir. Toque el punto de arriba para reintentar.`
+        : `${n} figuras importadas.`);
+    });
+  });
+}
+
 function abrirFicha(id){
   const nueva = !id;
-  const f = nueva
-    ? {id:'f'+Date.now()+Math.floor(Math.random()*99), codigo:'', nombre:'', categoria:'', claves:'',
-       medidas:'', existencia:0, minimo:3, precio:0, dias:2, molde:'bueno', ubicacion:'', notas:'', foto:''}
-    : Object.assign({}, figuras.find(x=>x.id===id));
+  const f = nueva ? figuraNueva() : Object.assign({}, figuras.find(x=>x.id===id));
 
   const v30 = nueva ? 0 : vendidasDesde(f.id, 30);
 
@@ -676,6 +905,205 @@ function abrirVenta(f){
   });
 }
 
+/* ══════════ reportes ══════════ */
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                     'agosto','septiembre','octubre','noviembre','diciembre'];
+
+function porMes(n){
+  const mapa = new Map();
+  const hoy = new Date();
+  for (let i = n-1; i >= 0; i--){
+    const d = new Date(hoy.getFullYear(), hoy.getMonth()-i, 1);
+    const clave = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    mapa.set(clave, {clave:clave, etiqueta: MESES[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2),
+                     unidades:0, ingresos:0});
+  }
+  ventas.forEach(v=>{
+    const d = new Date(v.fecha);
+    if (isNaN(d)) return;
+    const clave = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const m = mapa.get(clave);
+    if (m){ m.unidades += Number(v.cantidad)||0; m.ingresos += Number(v.total)||0; }
+  });
+  return [...mapa.values()];
+}
+
+function estacionalidad(){
+  const acum = MESES.map(()=>({unidades:0, ingresos:0, años:new Set()}));
+  ventas.forEach(v=>{
+    const d = new Date(v.fecha);
+    if (isNaN(d)) return;
+    const a = acum[d.getMonth()];
+    a.unidades += Number(v.cantidad)||0;
+    a.ingresos += Number(v.total)||0;
+    a.años.add(d.getFullYear());
+  });
+  return acum.map((a,i)=>({
+    mes: MESES_LARGO[i],
+    unidades: a.unidades,
+    ingresos: a.ingresos,
+    años: a.años.size,
+    promedio: a.años.size ? a.unidades/a.años.size : 0,
+  }));
+}
+
+function topFiguras(desdeDias, limite){
+  const corte = Date.now() - desdeDias*86400000;
+  const mapa = new Map();
+  ventas.forEach(v=>{
+    if (new Date(v.fecha).getTime() < corte) return;
+    const k = String(v.id);
+    const m = mapa.get(k) || {nombre:v.nombre, codigo:v.codigo, unidades:0, ingresos:0};
+    m.unidades += Number(v.cantidad)||0;
+    m.ingresos += Number(v.total)||0;
+    mapa.set(k, m);
+  });
+  return [...mapa.values()].sort((a,b)=>b.unidades-a.unidades).slice(0, limite||15);
+}
+
+/* Excel abre bien el CSV con punto y coma y marca de orden de bytes. */
+function descargarCSV(nombre, filas){
+  const esc1 = c => {
+    const s = String(c == null ? '' : c);
+    return /[";\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const texto = '\uFEFF' + filas.map(f=>f.map(esc1).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([texto], {type:'text/csv;charset=utf-8'}));
+  a.download = nombre;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function csvInventario(){
+  const filas = [['Codigo','Nombre','Categoria','Palabras de busqueda','Estado','En bodega',
+                  'Avisar en','Precio','Valor en bodega','Molde','Dias produccion','Medidas','Ubicacion','Notas']];
+  figuras.slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).forEach(f=>{
+    filas.push([f.codigo, f.nombre, f.categoria, f.claves, etiqueta(f), Number(f.existencia)||0,
+                Number(f.minimo)||0, Number(f.precio)||0,
+                (Number(f.existencia)||0)*(Number(f.precio)||0),
+                f.molde, Number(f.dias)||0, f.medidas, f.ubicacion, f.notas]);
+  });
+  descargarCSV(`inventario-${new Date().toISOString().slice(0,10)}.csv`, filas);
+}
+
+function csvVentas(){
+  if (!ventas.length){ brindis('Todavía no hay ventas registradas.'); return; }
+  const filas = [['Fecha','Ano','Mes','Codigo','Figura','Cantidad','Precio unitario','Total','Cliente','Nota']];
+  ventas.slice().sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)).forEach(v=>{
+    const d = new Date(v.fecha);
+    filas.push([d.toISOString().slice(0,10), d.getFullYear(), MESES_LARGO[d.getMonth()],
+                v.codigo, v.nombre, Number(v.cantidad)||0, Number(v.precio)||0,
+                Number(v.total)||0, v.cliente||'', v.nota||'']);
+  });
+  descargarCSV(`ventas-${new Date().toISOString().slice(0,10)}.csv`, filas);
+}
+
+function imprimirReporte(){
+  const meses = porMes(12);
+  const est = estacionalidad().filter(m=>m.unidades>0).sort((a,b)=>b.unidades-a.unidades);
+  const top = topFiguras(365, 20);
+  const listas = figuras.filter(f=>estado(f)==='listo');
+  const piezas = listas.reduce((s,f)=>s+(Number(f.existencia)||0),0);
+  const valor  = listas.reduce((s,f)=>s+(Number(f.existencia)||0)*(Number(f.precio)||0),0);
+  const bajas  = figuras.filter(f=>estado(f)==='listo' && Number(f.existencia) <= umbral(f));
+  const hoy = new Date();
+
+  const tabla = (cabeceras, filas) => filas.length
+    ? `<table><thead><tr>${cabeceras.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')}</tr></thead>
+       <tbody>${filas.map(f=>`<tr>${f.map((c,i)=>`<td${i?' class="num"':''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+    : `<p style="font-size:9.5pt;color:#666">Sin datos todavía.</p>`;
+
+  document.getElementById('impresion').innerHTML = `
+    <h1>Filemón · Reporte de inventario y ventas</h1>
+    <div style="font-size:9pt;color:#555">
+      Generado el ${hoy.getDate()} de ${MESES_LARGO[hoy.getMonth()]} de ${hoy.getFullYear()}
+    </div>
+
+    <h2>Resumen</h2>
+    ${tabla(['Indicador','Valor'], [
+      ['Figuras registradas', figuras.length],
+      ['Piezas listas en bodega', piezas],
+      ['Valor de lo que está listo', pesos(valor)],
+      ['Figuras por reponer', bajas.length],
+      ['Moldes dañados', figuras.filter(f=>f.molde==='danado').length],
+      ['Ventas registradas', ventas.length],
+    ])}
+
+    <h2>Ventas mes a mes (últimos 12 meses)</h2>
+    ${tabla(['Mes','Unidades','Ingresos'],
+      meses.map(m=>[m.etiqueta, m.unidades, pesos(m.ingresos)]))}
+
+    <h2>Meses fuertes (todos los años juntos)</h2>
+    ${est.length
+      ? tabla(['Mes','Unidades','Ingresos','Años con datos'],
+          est.map(m=>[m.mes, m.unidades, pesos(m.ingresos), m.años]))
+        + `<p style="font-size:8.5pt;color:#666;margin-top:5pt">
+             ${est.some(m=>m.años>1)
+               ? 'Con más de un año de datos, esta tabla ya indica temporada.'
+               : 'Todavía hay menos de un año de historia: esta tabla muestra lo vendido, no una temporada confirmada.'}
+           </p>`
+      : `<p style="font-size:9.5pt;color:#666">Se necesita al menos un año de ventas registradas para hablar de temporadas.</p>`}
+
+    <h2>Figuras más vendidas (últimos 12 meses)</h2>
+    ${tabla(['Figura','Código','Unidades','Ingresos'],
+      top.map(t=>[t.nombre, t.codigo, t.unidades, pesos(t.ingresos)]))}
+
+    <h2>Por reponer</h2>
+    ${tabla(['Figura','En bodega','Avisar en','Días de producción'],
+      bajas.map(f=>[f.nombre, Number(f.existencia)||0, umbral(f), Number(f.dias)||0]))}
+
+    <div class="pie">Documento interno de Filemón. Generado desde el inventario.</div>`;
+
+  cerrar();
+  setTimeout(()=>window.print(), 120);
+}
+
+function abrirReportes(){
+  const meses = porMes(12);
+  const maxU = Math.max(1, ...meses.map(m=>m.unidades));
+  const pico = Math.max(...meses.map(m=>m.unidades));
+  const conVentas = ventas.length > 0;
+
+  const capa = abrir(`
+    <div class="hoja-top"><h2>Reportes</h2><button class="cerrar">×</button></div>
+
+    <div class="campo"><label>Ventas mes a mes</label>
+      ${conVentas
+        ? meses.map(m=>`
+            <div class="barra${m.unidades===pico && pico>0 ? ' pico':''}">
+              <span>${m.etiqueta}</span>
+              <span style="flex:1"><i style="width:${Math.round(m.unidades/maxU*100)}%"></i></span>
+              <span class="val">${m.unidades}</span>
+            </div>`).join('')
+        : `<span class="pista">Aún no hay ventas registradas. En cuanto empiece a registrarlas,
+             aquí va a ver de un vistazo cuáles son sus meses fuertes.</span>`}
+    </div>
+
+    <div class="campo"><label>Descargar para Excel</label>
+      <button class="btn btn-borde" id="r-inv" style="width:100%">Inventario completo</button>
+      <button class="btn btn-borde" id="r-ven" style="width:100%;margin-top:7px">Historial de ventas</button>
+      <span class="pista">Se descargan como CSV: se abren directo en Excel con doble clic.</span></div>
+
+    <div class="campo"><label>Reporte en PDF</label>
+      <button class="btn btn-primario" id="r-pdf" style="width:100%">Generar reporte</button>
+      <span class="pista">Se abre la ventana de impresión: elija <b>Guardar como PDF</b> en el destino.</span></div>
+
+    ${config.url ? `<div class="aviso" style="margin-top:16px">
+      Para el análisis por temporada con varios años, ejecute <b>generarReporte</b> desde
+      Apps Script: arma una hoja REPORTE que puede descargar como Excel o PDF desde el menú
+      Archivo de Google Sheets.</div>` : ''}`);
+
+  const h = capa.querySelector('.hoja');
+  h.querySelector('#r-inv').addEventListener('click', ()=>{
+    if (!figuras.length){ brindis('Todavía no hay figuras registradas.'); return; }
+    csvInventario(); brindis('Inventario descargado.');
+  });
+  h.querySelector('#r-ven').addEventListener('click', csvVentas);
+  h.querySelector('#r-pdf').addEventListener('click', imprimirReporte);
+}
+
 /* ══════════ menú ══════════ */
 function abrirMenu(){
   const listas = figuras.filter(f=>estado(f)==='listo');
@@ -718,6 +1146,13 @@ function abrirMenu(){
     : `<div class="campo"><label>Qué producir primero</label>
         <span class="pista">Registre ventas por unos días y aquí le aparecerá qué reponer, ordenado por urgencia.</span></div>`}
 
+    <div class="campo" style="margin-top:18px"><label>Reportes</label>
+      <button class="btn btn-borde" id="verReportes" style="width:100%">Ventas por mes, Excel y PDF</button></div>
+
+    <div class="campo" style="margin-top:18px"><label>Cargar su catálogo</label>
+      <button class="btn btn-borde" id="importarFotos" style="width:100%">Importar desde las fotos</button>
+      <span class="pista">Lee los nombres de sus archivos y crea las figuras con las palabras de búsqueda ya puestas.</span></div>
+
     <div class="campo" style="margin-top:18px"><label>Conexión con Google Sheets</label>
       <input id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(config.url)}">
       <span class="pista">Dirección de la aplicación web de Apps Script.</span></div>
@@ -737,6 +1172,9 @@ function abrirMenu(){
       <span class="pista">Sirve para pasar lo que ya tenía registrado a su hoja de cálculo.</span></div>`);
 
   const h = capa.querySelector('.hoja');
+
+  h.querySelector('#verReportes').addEventListener('click', abrirReportes);
+  h.querySelector('#importarFotos').addEventListener('click', abrirImportador);
 
   h.querySelector('#cfg-ok').addEventListener('click', async ()=>{
     config.url = h.querySelector('#cfg-url').value.trim();

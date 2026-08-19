@@ -70,3 +70,53 @@ a `COLUMNAS` en `Codigo.gs` — el verificador comprueba que coincidan.
 
 Dos personas editando la misma figura a la vez: gana la última en sincronizar,
 sin aviso. No lo arregle sin pedirlo; con menos de 50 figuras no compensa.
+
+## Importador desde nombres de archivo
+
+Las fotos del taller vienen nombradas como `ABEJA MIEL FLOR NIÑA.jpg`. El nombre
+del archivo *es* la ficha: de ahí salen el nombre, las palabras de búsqueda y el
+público. `analizarNombre()` lo interpreta.
+
+- Un archivo = un registro, aunque contenga varias figuras. Las palabras sueltas
+  se vuelven claves de búsqueda, que es justo lo que hace útil el buscador.
+- Se generan plurales según la regla española (`flor→flores`, no `flors`) y
+  diminutivos (`conejo→conejito`), porque así pide la gente.
+- Las palabras vacías (`y`, `de`, `la`) no entran a las claves, y `coincide()`
+  también las descarta de la consulta.
+- Importar dos veces no duplica: se comparan los nombres normalizados y las
+  repetidas aparecen desmarcadas.
+- Sin conexión a Sheets se importan los nombres **sin fotos**. Cien fotos en
+  `localStorage` revientan la cuota del navegador.
+- Las etiquetas de color de Finder (macOS) no viajan en la subida. El navegador
+  solo recibe el nombre del archivo.
+
+## Carga masiva desde Drive
+
+`importarDesdeCarpeta()` en `Codigo.gs` lee una carpeta de Drive, interpreta el
+nombre de cada archivo con `analizarNombreGS()` y escribe las filas en FIGURAS
+en un solo `setValues` (no `appendRow` por fila: con 100 archivos se agota el
+límite de ejecución).
+
+`analizarNombreGS()` es el gemelo de `analizarNombre()` del navegador. Si cambia
+la lógica en uno, cámbiela en el otro o las dos vías darán claves distintas.
+
+Las fotos importadas así se quedan en su carpeta original, no en `Filemon - Fotos`.
+Por eso «Quitar foto» sobre ellas limpia la URL pero no manda el archivo a la
+papelera. Es intencional: son las fotos originales del taller.
+
+## Reportes
+
+Dos vías, a propósito:
+
+- **Navegador** (`abrirReportes`): vista rápida de 12 meses, CSV para Excel y
+  reporte imprimible vía `@media print` sobre `#impresion`. Sin librerías: no se
+  agregan dependencias para generar xlsx o pdf.
+- **Hoja** (`generarReporte` en Codigo.gs): pestaña REPORTE con el análisis de
+  temporada. Google Sheets ya exporta a Excel y a PDF desde su propio menú, así
+  que no se escribe código de exportación.
+
+El CSV usa punto y coma y marca de orden de bytes (`\uFEFF`): es lo que Excel en
+español espera. No lo cambie a coma sin probarlo en un Excel real.
+
+Con menos de un año de datos, el reporte debe decir explícitamente que no es
+temporada confirmada. No presente correlaciones de un solo año como estacionalidad.
