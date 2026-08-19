@@ -113,8 +113,20 @@ piezas del molde, y tocar una abre su ficha.
 - Pide la foto en alta cambiando `sz=w600` por `sz=w1600` en la URL de Drive.
 - Gestos con Pointer Events: dos punteros para pellizcar, uno para arrastrar
   (solo con zoom), doble toque para alternar 1x/2.5x, rueda en computador.
-- `limitar()` impide arrastrar la imagen fuera del lienzo y la recentra al
-  volver a 1x.
+- `.visor-lienzo` lleva `min-height:0`. Sin eso, el ítem flexible no se encoge
+  por debajo de su contenido y la foto se corta por abajo. Ya pasó.
+- `limitar()` calcula el margen sobre el tamaño real que ocupa la imagen, no
+  sobre el lienzo: una foto vertical deja franjas laterales por las que no debe
+  poder arrastrarse, y una ampliada sí debe recorrerse entera. Tiene en cuenta
+  el giro, porque a 90° y 270° se intercambian ancho y alto.
+- La tira de piezas va en una sola fila con desplazamiento horizontal: en
+  varias filas le robaba demasiado alto a la foto en el celular.
+- Dos modos, porque las fotos llegan con proporciones distintas según el celular
+  que las tomó: **Ajustar** muestra la foto completa (escala 1, `object-fit:
+  contain`) y **Llenar** la agranda hasta cubrir la pantalla. El doble toque
+  alterna entre los dos. Al abrir, si la foto aprovecha menos del 62% del
+  lienzo, arranca en Llenar; si no, en Ajustar.
+- No etiquete el botón como "1:1": sugiere tamaño real en píxeles y confunde.
 - El giro del visor es temporal, para mirar. El giro que se guarda es el de la
   ficha del molde.
 - Las miniaturas son `<span data-zoom>` dentro de un `<button>`, no botones

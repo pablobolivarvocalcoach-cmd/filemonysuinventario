@@ -221,8 +221,13 @@ la app esté verde.
 ## Ver la foto en grande
 
 Toque la miniatura de cualquier molde o pieza y la plancha se abre a pantalla
-completa. Pellizque para acercar, doble toque para alternar, arrastre para
-moverse. Debajo aparecen las piezas del molde con su número: toque una para
+completa. Hay dos modos: **Ajustar** muestra la foto entera y **Llenar** la
+agranda hasta cubrir la pantalla, aunque sobresalga por los lados. El doble toque
+alterna entre los dos, el pellizco acerca más, y con zoom puede arrastrar.
+
+Como cada foto llega con proporciones distintas según el celular que la tomó, el
+visor se adapta al abrir: si la foto quedaría muy pequeña en el centro, arranca
+en Llenar. Debajo aparecen las piezas del molde con su número: toque una para
 abrir su ficha sin cerrar lo que está mirando.
 
 Los botones de giro del visor son solo para mirar. Para dejar la foto derecha de
