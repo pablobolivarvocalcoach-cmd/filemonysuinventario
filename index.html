@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2B3439">
+<title>Filemón · Inventario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yeso:#E8E8E3; --yeso-alto:#F4F4F0; --pizarra:#2B3439; --pizarra-2:#3C484E;
+    --grafito:#1A1F22; --tiza:#8C948F; --linea:#CFCFC7;
+    --listo:#146B52; --encargo:#A2620A; --alerta:#97302C; --tinta:#1F5F6B;
+    --display:'Bricolage Grotesque',system-ui,sans-serif;
+    --texto:'Public Sans',system-ui,sans-serif;
+    --dato:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--texto); color:var(--grafito); background:var(--yeso);
+    background-image:radial-gradient(rgba(255,255,255,.55) 1px,transparent 1px);
+    background-size:4px 4px; -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:720px;margin:0 auto;min-height:100vh;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+  button{font-family:inherit;cursor:pointer}
+  input,textarea,select{font-family:inherit;font-size:16px}
+  :focus-visible{outline:2.5px solid var(--tinta);outline-offset:2px}
+
+  .top{background:var(--pizarra);color:var(--yeso-alto);padding:16px 18px 14px;
+       position:sticky;top:0;z-index:40;box-shadow:0 6px 18px rgba(43,52,57,.16)}
+  .marca{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+  .marca h1{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin:0;color:#fff}
+  .sync{display:flex;align-items:center;gap:7px;background:none;border:none;
+        font-family:var(--dato);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+        color:rgba(232,232,227,.75);padding:6px 4px}
+  .punto{width:8px;height:8px;border-radius:50%;background:var(--tiza);flex:0 0 8px}
+  .punto.ok{background:#4FCF9C} .punto.mal{background:#E07A6E} .punto.trab{background:#E0B96E}
+  @media (prefers-reduced-motion:no-preference){ .punto.trab{animation:late 1s ease-in-out infinite} }
+  @keyframes late{50%{opacity:.35}}
+
+  .buscar{position:relative}
+  .buscar input{width:100%;padding:15px 44px 15px 16px;border:none;border-radius:3px;
+                background:var(--yeso-alto);color:var(--grafito);font-size:17px;font-weight:500}
+  .buscar input::placeholder{color:#9A9A93;font-weight:400}
+  .limpiar{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;
+           background:transparent;color:var(--tiza);font-size:22px;line-height:1;padding:8px 10px}
+
+  .chips{display:flex;gap:7px;margin-top:11px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;font-family:var(--dato);font-size:11px;letter-spacing:.06em;padding:7px 11px;
+        border-radius:2px;border:1px solid rgba(232,232,227,.28);background:transparent;
+        color:rgba(232,232,227,.82);text-transform:uppercase}
+  .chip[aria-pressed="true"]{background:var(--yeso-alto);color:var(--pizarra);border-color:var(--yeso-alto);font-weight:600}
+
+  .respuesta{margin:14px 14px 0;background:#fff;border:1px solid var(--linea);
+             border-left:5px solid var(--tinta);border-radius:3px;padding:15px 16px}
+  .eyebrow{font-family:var(--dato);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+           color:var(--tiza);display:block;margin-bottom:9px}
+  .respuesta p{margin:0 0 13px;font-size:15px;line-height:1.55;white-space:pre-wrap}
+  .copiar{width:100%;padding:12px;border:none;border-radius:3px;background:var(--pizarra);color:#fff;
+          font-family:var(--dato);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+  .copiar.ok{background:var(--listo)}
+
+  .sello{display:inline-block;font-family:var(--dato);font-weight:600;font-size:10.5px;
+         letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;
+         border:1.5px solid currentColor;border-radius:2px}
+  .sello.listo{color:var(--listo)} .sello.encargo{color:var(--encargo)} .sello.no{color:var(--alerta)}
+
+  .cuerpo{padding:14px}
+  .conteo{font-family:var(--dato);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+          color:var(--tiza);margin:4px 2px 11px}
+  .ficha{display:flex;gap:13px;background:#fff;border:1px solid var(--linea);border-radius:3px;
+         padding:11px;margin-bottom:9px;width:100%;text-align:left;position:relative}
+  .ficha:active{background:#FAFAF7}
+  .ficha.pend::after{content:'';position:absolute;top:7px;right:7px;width:7px;height:7px;
+                     border-radius:50%;background:#E0B96E}
+  .foto{width:66px;height:66px;flex:0 0 66px;border-radius:2px;background:#EDEDE7 center/cover no-repeat;
+        display:flex;align-items:center;justify-content:center;font-family:var(--dato);
+        font-size:9px;color:#B4B4AC;letter-spacing:.06em}
+  .info{flex:1;min-width:0}
+  .cod{font-family:var(--dato);font-size:10.5px;color:var(--tiza);letter-spacing:.08em}
+  .nom{font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em;
+       margin:2px 0 6px;line-height:1.2;overflow-wrap:anywhere}
+  .pie{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .precio{font-family:var(--dato);font-size:12px;color:var(--pizarra-2)}
+  .cant{flex:0 0 auto;align-self:center;text-align:center;padding-left:6px;
+        border-left:1px solid var(--linea);min-width:58px}
+  .cant b{font-family:var(--display);font-weight:800;font-size:26px;line-height:1}
+  .cant span{display:block;font-family:var(--dato);font-size:9px;color:var(--tiza);
+             letter-spacing:.08em;margin-top:3px}
+
+  .vacio{text-align:center;padding:48px 26px}
+  .vacio h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0 0 8px}
+  .vacio p{color:var(--pizarra-2);font-size:14.5px;line-height:1.6;margin:0 0 20px}
+
+  .btn{border:none;border-radius:3px;padding:13px 18px;font-family:var(--dato);
+       font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+  .btn-primario{background:var(--pizarra);color:#fff}
+  .btn-borde{background:transparent;color:var(--pizarra);border:1.5px solid var(--pizarra)}
+  .btn-peligro{background:transparent;color:var(--alerta);border:1.5px solid var(--alerta)}
+  .btn-verde{background:var(--listo);color:#fff}
+  .btn[disabled]{opacity:.5;pointer-events:none}
+
+  .flotante{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:45;display:flex;gap:9px}
+  .flotante .btn{box-shadow:0 5px 16px rgba(43,52,57,.3);padding:14px 20px}
+  .btn-mas{background:var(--tinta);color:#fff}
+
+  .capa{position:fixed;inset:0;background:rgba(26,31,34,.55);z-index:60;
+        display:flex;align-items:flex-end;justify-content:center}
+  .hoja{background:var(--yeso-alto);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;
+        border-radius:10px 10px 0 0;padding:20px 18px 30px}
+  .hoja-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+  .hoja-top h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;letter-spacing:-.02em}
+  .cerrar{border:none;background:transparent;font-size:27px;line-height:1;color:var(--tiza);padding:0 4px}
+
+  .campo{margin-bottom:14px}
+  .campo label{display:block;font-family:var(--dato);font-size:10px;letter-spacing:.12em;
+               text-transform:uppercase;color:var(--pizarra-2);margin-bottom:5px}
+  .campo input,.campo textarea,.campo select{width:100%;padding:11px 12px;border:1px solid var(--linea);
+                                             border-radius:3px;background:#fff;color:var(--grafito)}
+  .campo textarea{resize:vertical;min-height:62px;line-height:1.5}
+  .pista{display:block;margin-top:5px;font-size:12px;color:var(--tiza);line-height:1.45;
+         font-family:var(--texto);letter-spacing:0;text-transform:none}
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+  .contador{display:flex;align-items:center;gap:12px}
+  .contador button{width:46px;height:46px;border:1.5px solid var(--pizarra);background:#fff;
+                   border-radius:3px;font-size:22px;line-height:1;color:var(--pizarra)}
+  .contador input{flex:1;text-align:center;font-family:var(--display);font-weight:800;font-size:24px}
+
+  .foto-caja{display:flex;gap:13px;align-items:center;margin-bottom:16px;padding:13px;
+             background:#fff;border:1px solid var(--linea);border-radius:3px}
+  .foto-prev{width:76px;height:76px;flex:0 0 76px;border-radius:2px;background:#EDEDE7 center/cover no-repeat;
+             display:flex;align-items:center;justify-content:center;font-family:var(--dato);
+             font-size:9px;color:#B4B4AC}
+
+  .aviso{background:#fff;border:1px solid var(--linea);border-left:4px solid var(--encargo);
+         padding:12px 13px;border-radius:3px;font-size:13.5px;line-height:1.55;margin-bottom:14px}
+  .acciones{display:flex;gap:9px;margin-top:20px}
+  .acciones .btn{flex:1}
+
+  .tarjetas{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
+  .tarjeta{background:#fff;border:1px solid var(--linea);border-radius:3px;padding:13px}
+  .tarjeta b{font-family:var(--display);font-weight:800;font-size:26px;line-height:1;display:block}
+  .tarjeta span{font-family:var(--dato);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+                color:var(--tiza);margin-top:5px;display:block}
+
+  .brindis{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--pizarra);
+           color:#fff;padding:11px 18px;border-radius:3px;font-size:13.5px;z-index:80;
+           box-shadow:0 5px 16px rgba(0,0,0,.25);max-width:88%;text-align:center}
+  @media (prefers-reduced-motion:no-preference){
+    .brindis{animation:sube .22s ease-out}
+    @keyframes sube{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="marca">
+      <h1>Filemón</h1>
+      <button class="sync" id="btnSync"><span class="punto" id="punto"></span><span id="txtSync">Sin conectar</span></button>
+    </div>
+    <div class="buscar">
+      <input id="q" type="search" placeholder="¿Tienes osos?  Escriba aquí…" autocomplete="off">
+      <button class="limpiar" id="limpiar" aria-label="Limpiar" style="display:none">×</button>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip" data-f="todas" aria-pressed="true">Todas</button>
+      <button class="chip" data-f="listo" aria-pressed="false">Listas hoy</button>
+      <button class="chip" data-f="encargo" aria-pressed="false">Por encargo</button>
+      <button class="chip" data-f="no" aria-pressed="false">Sin molde</button>
+      <button class="chip" data-f="bajo" aria-pressed="false">Se está acabando</button>
+    </div>
+  </div>
+
+  <div id="panel"></div>
+  <div class="cuerpo">
+    <div class="conteo" id="conteo"></div>
+    <div id="lista"></div>
+  </div>
+
+  <div class="flotante">
+    <button class="btn btn-mas" id="nueva">+ Figura</button>
+    <button class="btn btn-primario" id="menu">···</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const app = $('#app');
+
+let figuras = [], ventas = [], cola = [], config = {url:'', clave:''};
+let filtro = 'todas', consulta = '', sincronizando = false, drenando = false, listo = false;
+
+/* ══════════ almacenamiento local (caché) ══════════ */
+const cache = {
+  async get(k){
+    try { if (window.storage){ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } } catch(e){}
+    try { const v = localStorage.getItem('filemon:'+k); return v ? JSON.parse(v) : null; } catch(e){ return null; }
+  },
+  async set(k,v){
+    try { if (window.storage){ await window.storage.set(k, JSON.stringify(v)); return; } } catch(e){}
+    try { localStorage.setItem('filemon:'+k, JSON.stringify(v)); } catch(e){}
+  }
+};
+
+/* ══════════ utilidades ══════════ */
+const limpio = t => (t||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const esc = t => String(t == null ? '' : t)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const umbral = f => (f.minimo === 0 || f.minimo === '0' || Number(f.minimo)) ? Number(f.minimo) : 3;
+const pesos  = n => '$' + (Number(n)||0).toLocaleString('es-CO',{maximumFractionDigits:0});
+
+function estado(f){
+  if (f.molde === 'danado' || f.molde === 'sinmolde') return 'no';
+  return (Number(f.existencia)||0) > 0 ? 'listo' : 'encargo';
+}
+function etiqueta(f){
+  const e = estado(f);
+  if (e === 'listo') return 'Listas hoy';
+  if (e === 'encargo') return 'Por encargo';
+  return f.molde === 'danado' ? 'Molde dañado' : 'No la manejo';
+}
+function brindis(msg){
+  document.querySelectorAll('.brindis').forEach(b=>b.remove());
+  const d = document.createElement('div');
+  d.className = 'brindis'; d.textContent = msg;
+  app.appendChild(d); setTimeout(()=>d.remove(), 2800);
+}
+
+/* ══════════ puente con Google Sheets ══════════ */
+async function api(accion, datos){
+  if (!config.url) throw new Error('Falta conectar la hoja');
+  const r = await fetch(config.url, {
+    method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({token:config.clave, accion:accion, datos:datos||{}})
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Error del servidor');
+  return j.datos;
+}
+
+function marcaSync(clase, texto){
+  $('#punto').className = 'punto ' + clase;
+  $('#txtSync').textContent = texto;
+}
+
+/* Toda modificación entra a una cola y se envía en orden. Si no hay señal,
+   la cola espera en el celular; nada se pierde ni se revierte al sincronizar. */
+function idsEnCola(){
+  const s = new Set();
+  cola.forEach(op=>{ const id = op.datos && op.datos.id; if (id) s.add(String(id)); });
+  return s;
+}
+
+async function guardarCola(){ try { await cache.set('cola', cola); } catch(e){} }
+
+async function encolar(tipo, datos){
+  cola.push({tipo:tipo, datos:datos});
+  await guardarCola();
+  pintar();
+  return drenar(true);
+}
+
+async function drenar(silencioso){
+  if (!config.url || !cola.length || drenando) return !cola.length;
+  drenando = true;
+  marcaSync('trab','Enviando');
+  try{
+    while (cola.length){
+      await api(cola[0].tipo, cola[0].datos);
+      cola.shift();
+      await guardarCola();
+    }
+    marcaSync('ok','Al día');
+    pintar();
+    return true;
+  } catch(err){
+    marcaSync('mal', `Sin enviar (${cola.length})`);
+    if (!silencioso) brindis('No se pudo enviar: ' + err.message);
+    pintar();
+    return false;
+  } finally { drenando = false; }
+}
+
+async function sincronizar(silencioso){
+  if (sincronizando || !config.url) return;
+  sincronizando = true;
+  try{
+    const pendientes = cola.length;
+    const enviado = await drenar(silencioso);
+    if (!enviado) return;
+    marcaSync('trab','Sincronizando');
+    const d = await api('leer');
+    figuras = d.figuras || [];
+    ventas  = d.ventas  || [];
+    await cache.set('figuras', figuras);
+    await cache.set('ventas', ventas);
+    marcaSync('ok','Al día');
+    if (!silencioso) brindis(pendientes ? `${pendientes} cambio(s) enviados a la hoja.` : 'Inventario al día.');
+    pintar();
+  } catch(err){
+    marcaSync('mal','Sin conexión');
+    if (!silencioso) brindis('No se pudo conectar: ' + err.message);
+  } finally {
+    sincronizando = false;
+  }
+}
+
+/* ══════════ arranque ══════════ */
+async function iniciar(){
+  config  = (await cache.get('config'))  || {url:'', clave:''};
+  figuras = (await cache.get('figuras')) || [];
+  ventas  = (await cache.get('ventas'))  || [];
+  cola    = (await cache.get('cola'))    || [];
+  listo = true;
+  marcaSync('', config.url ? 'Tocar para sincronizar' : 'Sin conectar');
+  pintar();
+  if (config.url) sincronizar(true);
+}
+
+/* ══════════ respuesta para el cliente ══════════ */
+function redactar(f){
+  const e = estado(f);
+  const med = f.medidas ? ` Mide ${f.medidas}.` : '';
+  const pre = Number(f.precio) > 0 ? ` Valor: ${pesos(f.precio)} c/u.` : '';
+  if (e === 'listo'){
+    const n = Number(f.existencia)||0;
+    return `¡Hola! Sí 🙌 Tengo ${f.nombre} disponible: ${n} ${n===1?'unidad lista':'unidades listas'} para entrega inmediata.${pre}${med} ¿Cuántas necesitas?`;
+  }
+  if (e === 'encargo'){
+    const d = Number(f.dias)||0;
+    const plazo = d>0 ? `te las elaboro en ${d} ${d===1?'día':'días'}.` : 'te las elaboro sobre pedido.';
+    return `¡Hola! Sí manejo ${f.nombre}. En este momento no tengo unidades listas, pero ${plazo}${pre}${med} ¿Cuántas necesitas y para qué fecha?`;
+  }
+  return `Por ahora no tengo disponible ${f.nombre}. Con gusto te muestro otras figuras que sí manejo y te pueden servir 🙂`;
+}
+
+async function copiar(texto, boton){
+  let ok = false;
+  try { await navigator.clipboard.writeText(texto); ok = true; } catch(e){}
+  if (!ok){
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    app.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch(e){}
+    ta.remove();
+  }
+  if (ok && boton){
+    const antes = boton.textContent;
+    boton.textContent = '✓ Copiado'; boton.classList.add('ok');
+    setTimeout(()=>{ boton.textContent = antes; boton.classList.remove('ok'); }, 1900);
+  } else if (!ok) brindis('Seleccione el texto y cópielo manualmente.');
+}
+
+/* ══════════ ventas ══════════ */
+function vendidasDesde(id, dias){
+  const corte = Date.now() - dias*86400000;
+  return ventas.filter(v => String(v.id)===String(id) && new Date(v.fecha).getTime() >= corte)
+               .reduce((s,v)=>s+(Number(v.cantidad)||0),0);
+}
+
+/* ══════════ filtros ══════════ */
+function coincide(f,q){
+  if (!q) return true;
+  const bolsa = limpio([f.codigo,f.nombre,f.categoria,f.claves,f.notas].join(' '));
+  return q.split(/\s+/).filter(Boolean).every(p=>bolsa.includes(p));
+}
+function visibles(){
+  const q = limpio(consulta).trim();
+  return figuras.filter(f=>{
+    if (!coincide(f,q)) return false;
+    if (filtro === 'todas') return true;
+    if (filtro === 'bajo') return estado(f)==='listo' && Number(f.existencia) <= umbral(f);
+    return estado(f) === filtro;
+  }).sort((a,b)=>{
+    const o = {listo:0, encargo:1, no:2};
+    return (o[estado(a)]-o[estado(b)]) || (a.nombre||'').localeCompare(b.nombre||'','es');
+  });
+}
+
+/* ══════════ pintado ══════════ */
+function pintar(){
+  const lista = $('#lista'), panel = $('#panel'), conteo = $('#conteo');
+  if (!listo){ lista.innerHTML = '<div class="vacio"><p>Abriendo el inventario…</p></div>'; return; }
+
+  const res = visibles();
+  panel.innerHTML = '';
+  if (consulta.trim() && res.length){
+    const f = res[0], texto = redactar(f);
+    const caja = document.createElement('div');
+    caja.className = 'respuesta';
+    caja.innerHTML = `<span class="eyebrow">Respuesta lista · ${esc(f.codigo)}</span><p></p>
+                      <button class="copiar">Copiar para WhatsApp</button>`;
+    caja.querySelector('p').textContent = texto;
+    caja.querySelector('button').addEventListener('click', ev=>copiar(texto, ev.currentTarget));
+    panel.appendChild(caja);
+  }
+
+  if (!figuras.length){
+    conteo.textContent = '';
+    lista.innerHTML = `<div class="vacio">
+        <h2>${config.url ? 'Aún no hay figuras' : 'Conecte su hoja de cálculo'}</h2>
+        <p>${config.url
+          ? 'Registre su primera figura de yeso. Con 10 ya empieza a responderle al cliente sin ir hasta la bodega.'
+          : 'Abra el menú ··· y pegue la dirección de su aplicación web de Apps Script. También puede registrar figuras ahora y sincronizarlas después.'}</p>
+        <button class="btn btn-primario" id="primera">Registrar la primera</button></div>`;
+    $('#primera').addEventListener('click', ()=>abrirFicha(null));
+    return;
+  }
+
+  const piezas = figuras.filter(f=>estado(f)==='listo').reduce((s,f)=>s+(Number(f.existencia)||0),0);
+  conteo.textContent = `${res.length} de ${figuras.length} figuras · ${piezas} piezas en existencia`;
+
+  if (!res.length){
+    lista.innerHTML = `<div class="vacio"><h2>Nada con esa palabra</h2>
+      <p>Si el cliente la pide así y usted sí la maneja, abra la figura y agregue esa palabra a los sinónimos. La próxima vez la encuentra.</p></div>`;
+    return;
+  }
+
+  lista.innerHTML = '';
+  const pend = idsEnCola();
+  res.forEach(f=>{
+    const e = estado(f);
+    const b = document.createElement('button');
+    b.className = 'ficha' + (pend.has(String(f.id)) ? ' pend' : '');
+    b.innerHTML = `
+      <div class="foto" ${f.foto?`style="background-image:url('${esc(f.foto)}')"`:''}>${f.foto?'':'SIN FOTO'}</div>
+      <div class="info">
+        <div class="cod">${esc(f.codigo) || '—'}</div>
+        <div class="nom"></div>
+        <div class="pie"><span class="sello ${e}">${etiqueta(f)}</span>
+        ${Number(f.precio)>0?`<span class="precio">${pesos(f.precio)}</span>`:''}</div>
+      </div>
+      <div class="cant"><b>${Number(f.existencia)||0}</b><span>EN STOCK</span></div>`;
+    b.querySelector('.nom').textContent = f.nombre || 'Sin nombre';
+    b.addEventListener('click', ()=>abrirFicha(f.id));
+    lista.appendChild(b);
+  });
+}
+
+/* ══════════ modales ══════════ */
+function cerrar(){ document.querySelectorAll('.capa').forEach(c=>c.remove()); }
+function abrir(html){
+  cerrar();
+  const capa = document.createElement('div');
+  capa.className = 'capa';
+  capa.innerHTML = `<div class="hoja">${html}</div>`;
+  capa.addEventListener('click', ev=>{ if (ev.target===capa) cerrar(); });
+  app.appendChild(capa);
+  const x = capa.querySelector('.cerrar');
+  if (x) x.addEventListener('click', cerrar);
+  return capa;
+}
+
+async function persistir(figura, extra){
+  const i = figuras.findIndex(x=>x.id===figura.id);
+  if (i>=0) figuras[i] = figura; else figuras.push(figura);
+  await cache.set('figuras', figuras);
+  pintar();
+
+  /* La foto viaja dentro de la operación encolada: si no hay señal en el
+     momento, sube igual cuando vuelva la conexión. */
+  const enviado = await encolar('guardar', Object.assign({}, figura, extra||{}));
+  if (enviado && extra && extra.fotoBase64) await sincronizar(true);
+  else if (!enviado && config.url) brindis('Guardado en el celular. Se enviará a la hoja al reconectar.');
+  return enviado;
+}
+
+function abrirFicha(id){
+  const nueva = !id;
+  const f = nueva
+    ? {id:'f'+Date.now()+Math.floor(Math.random()*99), codigo:'', nombre:'', categoria:'', claves:'',
+       medidas:'', existencia:0, minimo:3, precio:0, dias:2, molde:'bueno', ubicacion:'', notas:'', foto:''}
+    : Object.assign({}, figuras.find(x=>x.id===id));
+
+  const v30 = nueva ? 0 : vendidasDesde(f.id, 30);
+
+  const capa = abrir(`
+    <div class="hoja-top"><h2>${nueva?'Nueva figura':'Editar figura'}</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+
+    ${nueva?'':`<div class="acciones" style="margin:0 0 18px">
+      <button class="btn btn-verde" id="vender">Registrar venta</button>
+    </div>`}
+
+    ${(!nueva && v30>0)?`<div class="aviso">Vendió <b>${v30}</b> en los últimos 30 días. Le quedan <b>${Number(f.existencia)||0}</b>.</div>`:''}
+
+    <div class="foto-caja">
+      <div class="foto-prev" id="prev">${f.foto?'':'SIN FOTO'}</div>
+      <div style="flex:1">
+        <button class="btn btn-borde" id="btnFoto" style="width:100%">Tomar o subir foto</button>
+        <input type="file" id="archFoto" accept="image/*" style="display:none">
+        <button class="btn btn-peligro" id="quitaFoto" style="width:100%;margin-top:7px;${f.foto?'':'display:none'}">Quitar foto</button>
+      </div>
+    </div>
+
+    <div class="campo"><label for="c-nom">Nombre de la figura</label>
+      <input id="c-nom" placeholder="Oso sentado con corazón"></div>
+
+    <div class="dos">
+      <div class="campo"><label for="c-cod">Código</label><input id="c-cod" placeholder="OSO-01"></div>
+      <div class="campo"><label for="c-cat">Categoría</label>
+        <input id="c-cat" placeholder="Animales" list="cats"><datalist id="cats"></datalist></div>
+    </div>
+
+    <div class="campo"><label for="c-cla">Cómo la pide el cliente</label>
+      <textarea id="c-cla" placeholder="oso, osito, ositos, teddy, bear"></textarea>
+      <span class="pista">Separe con comas. Incluya diminutivos y errores comunes: es lo que hace que el buscador la encuentre.</span></div>
+
+    <div class="campo"><label>Piezas listas en bodega</label>
+      <div class="contador">
+        <button type="button" id="menos" aria-label="Restar una">−</button>
+        <input id="c-exi" type="number" min="0" inputmode="numeric">
+        <button type="button" id="mas" aria-label="Sumar una">+</button>
+      </div></div>
+
+    <div class="dos">
+      <div class="campo"><label for="c-pre">Precio por unidad</label>
+        <input id="c-pre" type="number" min="0" inputmode="numeric" placeholder="12000"></div>
+      <div class="campo"><label for="c-min">Avisar cuando queden</label>
+        <input id="c-min" type="number" min="0" inputmode="numeric"></div>
+    </div>
+
+    <div class="dos">
+      <div class="campo"><label for="c-mol">Estado del molde</label>
+        <select id="c-mol">
+          <option value="bueno">Bueno — puedo producir</option>
+          <option value="danado">Dañado — no puedo producir</option>
+          <option value="sinmolde">No tengo el molde</option>
+        </select></div>
+      <div class="campo"><label for="c-dia">Días para producir</label>
+        <input id="c-dia" type="number" min="0" inputmode="numeric"></div>
+    </div>
+
+    <div class="dos">
+      <div class="campo"><label for="c-med">Medidas</label><input id="c-med" placeholder="6 x 5 cm"></div>
+      <div class="campo"><label for="c-ubi">Dónde está el molde</label><input id="c-ubi" placeholder="Caja 1 · Estante A"></div>
+    </div>
+
+    <div class="campo"><label for="c-not">Notas internas</label>
+      <textarea id="c-not" placeholder="El más pedido para baby shower"></textarea></div>
+
+    <div class="acciones">
+      <button class="btn btn-primario" id="guardar">Guardar</button>
+      ${nueva?'':'<button class="btn btn-peligro" id="borrar">Eliminar</button>'}
+    </div>`);
+
+  const h = capa.querySelector('.hoja');
+  const campos = {'#c-nom':'nombre','#c-cod':'codigo','#c-cat':'categoria','#c-cla':'claves',
+                  '#c-exi':'existencia','#c-pre':'precio','#c-min':'minimo','#c-mol':'molde',
+                  '#c-dia':'dias','#c-med':'medidas','#c-ubi':'ubicacion','#c-not':'notas'};
+  Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = f[k] ?? ''; });
+
+  h.querySelector('#cats').innerHTML =
+    [...new Set(figuras.map(x=>x.categoria).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('');
+
+  const prev = h.querySelector('#prev');
+  if (f.foto) prev.style.backgroundImage = `url('${esc(f.foto)}')`;
+  let fotoBase64 = null, quitarFoto = false;
+
+  h.querySelector('#btnFoto').addEventListener('click', ()=>h.querySelector('#archFoto').click());
+  h.querySelector('#archFoto').addEventListener('change', ev=>{
+    const arch = ev.target.files && ev.target.files[0];
+    if (!arch) return;
+    const lector = new FileReader();
+    lector.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const max = 700, esc = Math.min(1, max/Math.max(img.width, img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width*esc); cv.height = Math.round(img.height*esc);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        fotoBase64 = cv.toDataURL('image/jpeg', 0.72);
+        quitarFoto = false;
+        prev.style.backgroundImage = `url('${fotoBase64}')`; prev.textContent = '';
+        h.querySelector('#quitaFoto').style.display = '';
+      };
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(arch);
+  });
+
+  h.querySelector('#quitaFoto').addEventListener('click', ()=>{
+    fotoBase64 = null; quitarFoto = true;
+    prev.style.backgroundImage = ''; prev.textContent = 'SIN FOTO';
+    h.querySelector('#quitaFoto').style.display = 'none';
+  });
+
+  const exi = h.querySelector('#c-exi');
+  h.querySelector('#mas').addEventListener('click', ()=>{ exi.value = (Number(exi.value)||0)+1; });
+  h.querySelector('#menos').addEventListener('click', ()=>{ exi.value = Math.max(0,(Number(exi.value)||0)-1); });
+
+  h.querySelector('#guardar').addEventListener('click', async ev=>{
+    Object.entries(campos).forEach(([s,k])=>{ f[k] = h.querySelector(s).value; });
+    if (!(f.nombre||'').trim()){ brindis('Escriba el nombre de la figura.'); return; }
+    ['existencia','precio','minimo','dias'].forEach(k=>{ f[k] = Number(f[k])||0; });
+    if (quitarFoto) f.foto = '';
+    ev.currentTarget.disabled = true;
+    cerrar();
+    await persistir(f, fotoBase64 ? {fotoBase64:fotoBase64} : (quitarFoto ? {quitarFoto:true} : null));
+    brindis(nueva ? 'Figura registrada.' : 'Cambios guardados.');
+  });
+
+  const bv = h.querySelector('#vender');
+  if (bv) bv.addEventListener('click', ()=>abrirVenta(f));
+
+  const bb = h.querySelector('#borrar');
+  if (bb) bb.addEventListener('click', ()=>{
+    const c2 = abrir(`<div class="hoja-top"><h2>¿Eliminar esta figura?</h2><button class="cerrar">×</button></div>
+      <p style="font-size:14.5px;line-height:1.6;color:var(--pizarra-2);margin:0">Se borra de la hoja junto con su foto. No se puede deshacer.</p>
+      <div class="acciones"><button class="btn btn-borde" id="no">Cancelar</button>
+      <button class="btn btn-peligro" id="si">Sí, eliminar</button></div>`);
+    c2.querySelector('#no').addEventListener('click', cerrar);
+    c2.querySelector('#si').addEventListener('click', async ()=>{
+      figuras = figuras.filter(x=>x.id!==f.id);
+      await cache.set('figuras', figuras);
+      cerrar(); pintar();
+      const enviado = await encolar('eliminar', {id:f.id});
+      brindis(enviado || !config.url
+        ? 'Figura eliminada.'
+        : 'Borrada aquí. Se quitará de la hoja al reconectar.');
+    });
+  });
+}
+
+function abrirVenta(f){
+  const capa = abrir(`
+    <div class="hoja-top"><h2>Registrar venta</h2><button class="cerrar">×</button></div>
+    <div class="aviso" style="border-left-color:var(--listo)">
+      <b>${esc(f.nombre)}</b> · quedan ${Number(f.existencia)||0} en bodega</div>
+    <div class="campo"><label>Cantidad vendida</label>
+      <div class="contador">
+        <button type="button" id="v-menos">−</button>
+        <input id="v-cant" type="number" min="1" value="1" inputmode="numeric">
+        <button type="button" id="v-mas">+</button>
+      </div></div>
+    <div class="dos">
+      <div class="campo"><label for="v-pre">Precio unitario</label>
+        <input id="v-pre" type="number" min="0" inputmode="numeric" value="${Number(f.precio)||0}"></div>
+      <div class="campo"><label for="v-cli">Cliente (opcional)</label><input id="v-cli"></div>
+    </div>
+    <div class="campo"><label for="v-not">Nota (opcional)</label><input id="v-not" placeholder="Pedido para baby shower"></div>
+    <div class="acciones"><button class="btn btn-verde" id="v-ok">Registrar y descontar</button></div>`);
+
+  const h = capa.querySelector('.hoja'), c = h.querySelector('#v-cant');
+  h.querySelector('#v-mas').addEventListener('click', ()=>{ c.value = (Number(c.value)||0)+1; });
+  h.querySelector('#v-menos').addEventListener('click', ()=>{ c.value = Math.max(1,(Number(c.value)||1)-1); });
+
+  h.querySelector('#v-ok').addEventListener('click', async ev=>{
+    const cantidad = Math.max(1, Number(c.value)||1);
+    const precio = Number(h.querySelector('#v-pre').value)||0;
+    if (cantidad > (Number(f.existencia)||0)){ brindis('No puede vender más de lo que tiene en bodega.'); return; }
+    ev.currentTarget.disabled = true;
+
+    const venta = {id:f.id, codigo:f.codigo, nombre:f.nombre, cantidad:cantidad, precio:precio,
+                   cliente:h.querySelector('#v-cli').value, nota:h.querySelector('#v-not').value};
+    f.existencia = Math.max(0, (Number(f.existencia)||0) - cantidad);
+    const i = figuras.findIndex(x=>x.id===f.id);
+    if (i>=0) figuras[i] = f;
+    ventas.push(Object.assign({fecha:new Date().toISOString(), total:cantidad*precio}, venta));
+    await cache.set('figuras', figuras); await cache.set('ventas', ventas);
+    cerrar(); pintar();
+
+    const enviado = await encolar('venta', venta);
+    brindis(enviado || !config.url
+      ? `Venta registrada. Quedan ${f.existencia}.`
+      : `Venta guardada en el celular. Sube sola al reconectar.`);
+  });
+}
+
+/* ══════════ menú ══════════ */
+function abrirMenu(){
+  const listas = figuras.filter(f=>estado(f)==='listo');
+  const bajas  = figuras.filter(f=>estado(f)==='listo' && Number(f.existencia) <= umbral(f));
+  const danados= figuras.filter(f=>f.molde==='danado');
+  const piezas = listas.reduce((s,f)=>s+(Number(f.existencia)||0),0);
+  const valor  = listas.reduce((s,f)=>s+(Number(f.existencia)||0)*(Number(f.precio)||0),0);
+
+  const mes = ventas.filter(v=>new Date(v.fecha).getTime() >= Date.now()-30*86400000);
+  const vendidoMes = mes.reduce((s,v)=>s+(Number(v.total)||0),0);
+
+  const producir = figuras.map(f=>{
+    const v = vendidasDesde(f.id, 30);
+    const dia = v/30;
+    const cobertura = dia > 0 ? (Number(f.existencia)||0)/dia : Infinity;
+    return {f:f, v:v, cobertura:cobertura};
+  }).filter(x=>x.v>0 && x.cobertura < 21 && x.f.molde==='bueno')
+    .sort((a,b)=>a.cobertura-b.cobertura).slice(0,6);
+
+  const capa = abrir(`
+    <div class="hoja-top"><h2>El taller hoy</h2><button class="cerrar">×</button></div>
+
+    <div class="tarjetas">
+      <div class="tarjeta"><b>${figuras.length}</b><span>Figuras registradas</span></div>
+      <div class="tarjeta"><b>${piezas}</b><span>Piezas en bodega</span></div>
+      <div class="tarjeta"><b>${bajas.length}</b><span>Se están acabando</span></div>
+      <div class="tarjeta"><b>${danados.length}</b><span>Moldes dañados</span></div>
+    </div>
+
+    <div class="aviso">Inventario listo para vender: <b>${pesos(valor)}</b><br>
+      Vendido en los últimos 30 días: <b>${pesos(vendidoMes)}</b></div>
+
+    ${producir.length ? `<div class="campo"><label>Qué producir primero</label>
+      ${producir.map(x=>`<div style="background:#fff;border:1px solid var(--linea);border-left:4px solid var(--encargo);
+        border-radius:3px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;line-height:1.5">
+        <b>${esc(x.f.nombre)}</b><br>
+        <span style="color:var(--pizarra-2)">Vendió ${x.v} en 30 días · quedan ${x.f.existencia} ·
+        ${x.cobertura < 1 ? 'agotada' : 'alcanza ~' + Math.round(x.cobertura) + ' días'}</span></div>`).join('')}
+      <span class="pista">Calculado con el ritmo de venta de los últimos 30 días.</span></div>`
+    : `<div class="campo"><label>Qué producir primero</label>
+        <span class="pista">Registre ventas por unos días y aquí le aparecerá qué reponer, ordenado por urgencia.</span></div>`}
+
+    <div class="campo" style="margin-top:18px"><label>Conexión con Google Sheets</label>
+      <input id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(config.url)}">
+      <span class="pista">Dirección de la aplicación web de Apps Script.</span></div>
+    <div class="campo">
+      <input id="cfg-clave" placeholder="Clave secreta" value="${esc(config.clave)}">
+      <span class="pista">La misma que puso en la variable CLAVE del script.</span></div>
+    <div class="acciones" style="margin-top:6px">
+      <button class="btn btn-primario" id="cfg-ok">Guardar conexión</button>
+      <button class="btn btn-borde" id="cfg-sync">Sincronizar</button>
+    </div>
+
+    <div class="campo" style="margin-top:22px"><label>Respaldo local</label>
+      <button class="btn btn-borde" id="exportar" style="width:100%">Descargar respaldo</button></div>
+    <div class="campo">
+      <button class="btn btn-borde" id="importarBtn" style="width:100%">Cargar respaldo o subir todo a la hoja</button>
+      <input type="file" id="importar" accept="application/json" style="display:none">
+      <span class="pista">Sirve para pasar lo que ya tenía registrado a su hoja de cálculo.</span></div>`);
+
+  const h = capa.querySelector('.hoja');
+
+  h.querySelector('#cfg-ok').addEventListener('click', async ()=>{
+    config.url = h.querySelector('#cfg-url').value.trim();
+    config.clave = h.querySelector('#cfg-clave').value.trim();
+    await cache.set('config', config);
+    brindis('Conexión guardada.');
+    sincronizar();
+  });
+  h.querySelector('#cfg-sync').addEventListener('click', ()=>{ cerrar(); sincronizar(); });
+
+  h.querySelector('#exportar').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify({figuras, ventas, fecha:new Date().toISOString()}, null, 2)],
+                          {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `filemon-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+    brindis('Respaldo descargado.');
+  });
+
+  h.querySelector('#importarBtn').addEventListener('click', ()=>h.querySelector('#importar').click());
+  h.querySelector('#importar').addEventListener('change', ev=>{
+    const arch = ev.target.files && ev.target.files[0];
+    if (!arch) return;
+    const lector = new FileReader();
+    lector.onload = async ()=>{
+      try{
+        const d = JSON.parse(lector.result);
+        if (!Array.isArray(d.figuras)) throw new Error('formato');
+        const fotos = d.fotos || {};
+        figuras = d.figuras.map(f=>Object.assign({}, f, {foto:f.foto||''}));
+        ventas = d.ventas || ventas;
+        await cache.set('figuras', figuras); await cache.set('ventas', ventas);
+        cerrar(); pintar();
+
+        if (!config.url){
+          brindis(`${figuras.length} figuras cargadas. Conecte la hoja para subirlas.`);
+          return;
+        }
+        figuras.forEach(f=>{
+          const op = Object.assign({}, f);
+          if (fotos[f.id]) op.fotoBase64 = fotos[f.id];
+          cola.push({tipo:'guardar', datos:op});
+        });
+        await guardarCola(); pintar();
+        const enviado = await drenar(false);
+        if (enviado){ await sincronizar(true); brindis(`${figuras.length} figuras subidas a la hoja.`); }
+        else brindis('Quedaron cambios sin enviar. Toque el punto de arriba para reintentar.');
+      } catch(e){ brindis('Ese archivo no es un respaldo válido.'); }
+    };
+    lector.readAsText(arch);
+  });
+}
+
+/* ══════════ eventos ══════════ */
+const q = $('#q');
+q.addEventListener('input', ()=>{
+  consulta = q.value;
+  $('#limpiar').style.display = consulta ? 'block' : 'none';
+  pintar();
+});
+$('#limpiar').addEventListener('click', ()=>{ q.value=''; consulta=''; $('#limpiar').style.display='none'; pintar(); q.focus(); });
+$('#chips').addEventListener('click', ev=>{
+  const b = ev.target.closest('.chip'); if (!b) return;
+  filtro = b.dataset.f;
+  $('#chips').querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
+  pintar();
+});
+$('#nueva').addEventListener('click', ()=>abrirFicha(null));
+$('#menu').addEventListener('click', abrirMenu);
+$('#btnSync').addEventListener('click', ()=>{ config.url ? sincronizar() : abrirMenu(); });
+document.addEventListener('keydown', ev=>{ if (ev.key==='Escape') cerrar(); });
+window.addEventListener('online', ()=>sincronizar(true));
+
+iniciar();
+})();
+</script>
+</body>
+</html>
