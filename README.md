@@ -42,7 +42,7 @@ Son tres partes: la hoja, el script y la página. Calcule 30 minutos la primera 
 
 ### Parte 3 — Publicar la página en GitHub Pages
 
-1. Cree un repositorio nuevo en GitHub, por ejemplo `filemon-inventario`.
+1. Cree un repositorio nuevo en GitHub llamado `filemonysuinventario`.
 2. Suba `index.html` y la carpeta `apps-script/` (puede arrastrarlos en la web de GitHub, o por Git):
 
 ```bash
@@ -50,12 +50,12 @@ git init
 git add .
 git commit -m "Inventario Filemón"
 git branch -M main
-git remote add origin https://github.com/USUARIO/filemon-inventario.git
+git remote add origin https://github.com/USUARIO/filemonysuinventario.git
 git push -u origin main
 ```
 
 3. En el repositorio: **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save**.
-4. En un par de minutos tendrá la dirección `https://USUARIO.github.io/filemon-inventario/`.
+4. En un par de minutos tendrá la dirección `https://USUARIO.github.io/filemonysuinventario/`.
 5. Ábrala en el celular y use **Compartir → Agregar a pantalla de inicio**. Le queda como una app.
 
 ### Parte 4 — Conectar
@@ -146,14 +146,16 @@ Si dos personas editan **la misma figura** al mismo tiempo desde dos celulares, 
 index.html              La app. Un solo archivo, sin dependencias.
 apps-script/Codigo.gs   El puente con Sheets y Drive.
 README.md               Este archivo.
-CLAUDE.md               Notas para trabajar en el repo con Claude Code.
-package.json            Expone "npm run check".
-verificar.mjs           Revisa que la estructura del repositorio esté correcta.
 ```
 
-Para confirmar que la estructura sigue correcta (nada anidado, nada duplicado, sin `.zip`
-sueltos) antes de publicar en GitHub Pages:
+---
+
+## Antes de publicar
 
 ```bash
 npm run check
 ```
+
+Revisa sintaxis, que no se haya comiteado la clave real, que ninguna operación
+salte la cola de sincronización, y que los campos de la app calcen con las
+columnas de la hoja. Sale con error si algo está mal.

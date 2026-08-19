@@ -1,44 +1,72 @@
-# Filemón · Inventario
+# CLAUDE.md — Reglas del proyecto Filemón
 
-Página estática (una sola app en `index.html`, sin build ni dependencias) que se publica
-directo en GitHub Pages. Los datos viven en Google Sheets/Drive del usuario, conectados
-a través de un Apps Script (`apps-script/Codigo.gs`) publicado como aplicación web.
+Lea este archivo completo antes de tocar código.
 
-## Estructura obligatoria
+## Qué es esto
 
-El repositorio debe tener exactamente esto en la raíz, sin carpetas anidadas ni archivos sueltos:
+Inventario interno de **figuras de yeso** para un taller en Cali. Lo usa la dueña
+desde el celular, de pie en la bodega, mientras una clienta espera respuesta por
+WhatsApp. No es una tienda: nadie externo ve esta página.
 
-```
-index.html
-README.md
-CLAUDE.md
-package.json
-verificar.mjs
-apps-script/
-  Codigo.gs
-```
+`index.html` es la app (un solo archivo, sin dependencias).
+`apps-script/Codigo.gs` es el backend, pegado dentro de la hoja de Google Sheets.
 
-Nada más. Si aparece un `.zip`, una carpeta duplicada, o `index.html` termina dentro de una
-subcarpeta, GitHub Pages deja de servir la app correctamente.
+## Reglas que no se negocian
 
-## Verificación
+**1. El molde y la pieza son cosas distintas.**
+`existencia` = piezas de yeso terminadas en bodega.
+`molde` = si la herramienta sirve para producir más.
+De ahí salen tres estados y no dos: *listas hoy* (hay existencia),
+*por encargo* (no hay existencia pero el molde sirve) y *no disponible*
+(molde dañado o inexistente). Colapsar esto en un solo campo hace que la
+dueña le prometa al cliente algo que no puede entregar. Es el peor error posible
+en este sistema.
 
-```bash
-npm run check
-```
+**2. Toda mutación pasa por la cola.**
+Guardar, vender y eliminar entran a `cola` mediante `encolar()`. Nunca se llama
+`api('guardar'|'venta'|'eliminar')` directo desde un manejador de eventos.
+`api('leer')` solo se invoca dentro de `sincronizar()`, y **después** de que
+`drenar()` haya vaciado la cola.
 
-Corre `verificar.mjs`, que confirma que la raíz tiene solo los archivos esperados, que
-`apps-script/` contiene únicamente `Codigo.gs`, que no hay `.zip` sueltos ni carpetas con
-nombres de duplicado (`copia-`, `nuevo-`, etc.), y que `index.html` es un documento HTML
-válido. Debe salir en verde antes de dar cualquier cambio de estructura por terminado.
+Motivo: `sincronizar()` reemplaza el estado local con el de la hoja. Si una
+operación pendiente no se envió antes de leer, la lectura la revierte en
+silencio. Ese bug ya existió y borraba ventas sin dejar rastro.
 
-## Notas para trabajar aquí
+**3. La foto viaja dentro de la operación encolada.**
+`fotoBase64` va en `datos` de la operación, no como parámetro suelto de un envío
+inmediato. Si no, una foto tomada sin señal nunca sube.
 
-- `index.html` es un solo archivo autocontenido (HTML + CSS + JS inline). No dividirlo en
-  módulos ni agregar un bundler: es intencional que no tenga build step, para que baste con
-  subirlo a GitHub Pages.
-- `apps-script/Codigo.gs` se pega manualmente en el editor de Google Apps Script; no se
-  ejecuta ni se importa desde Node.
-- No hay dependencias de npm. `package.json` solo existe para exponer `npm run check`.
-- El proyecto y su documentación (README.md) están en español, porque el usuario final no
-  programa y lo administra directamente.
+**4. El invariante de la venta.**
+Registrar una venta descuenta de `existencia` y agrega una fila en `VENTAS`.
+Las dos cosas o ninguna. Nunca se permite vender más de lo que hay en bodega.
+
+**5. Tres casos de foto en el backend, no dos.**
+Foto nueva, foto borrada a propósito, y guardado normal sin tocarla (hay que
+conservar la URL que ya estaba en la hoja). Confundir el segundo con el tercero
+hace que «Quitar foto» no funcione. Ya pasó.
+
+**6. La búsqueda se normaliza sin tildes y en minúscula**, en los dos lados de la
+comparación. La dueña escribe «corazon» buscando «corazón».
+
+**7. Nada de secretos en el repositorio.**
+La URL `/exec` y la clave las escribe la usuaria en la app y viven en su celular.
+`CLAVE` en `Codigo.gs` se queda como `CAMBIE-ESTA-CLAVE`. El repo es público.
+
+## Restricciones del entorno
+
+- Sin dependencias, sin bundler, sin framework. Un archivo HTML que abre con
+  doble clic o se sirve estático desde GitHub Pages.
+- Se usa desde **Firefox en Android**. Nada de APIs que no existan ahí.
+- `localStorage` es la caché local. La fuente de verdad es la hoja de Sheets.
+- Apps Script exige `Content-Type: text/plain` en el POST para evitar el
+  preflight de CORS. No lo cambie a `application/json`.
+
+## Antes de terminar cualquier tarea
+
+`node verificar.mjs` en verde. Si agrega un campo a la figura, agréguelo también
+a `COLUMNAS` en `Codigo.gs` — el verificador comprueba que coincidan.
+
+## Limitación aceptada
+
+Dos personas editando la misma figura a la vez: gana la última en sincronizar,
+sin aviso. No lo arregle sin pedirlo; con menos de 50 figuras no compensa.
