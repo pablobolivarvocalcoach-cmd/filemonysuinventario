@@ -201,6 +201,8 @@
   .vp b{font-family:var(--dato);font-size:11px;background:var(--yeso-alto);color:var(--pizarra);
         border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex:0 0 22px}
   .vp.sin{color:rgba(232,232,227,.55);font-style:italic}
+  .visor-guardar{flex:0 0 auto;padding:8px 16px 0;display:flex}
+  .visor-guardar .btn{flex:1}
   .visor-tip{flex:0 0 auto;text-align:center;color:rgba(232,232,227,.45);font-size:11px;padding:0 16px 6px}
 
   #impresion{display:none}
@@ -574,6 +576,9 @@ function abrirVisor(idMolde){
       <button data-a="izq" aria-label="Girar a la izquierda">&#8634;</button>
       <button data-a="der" aria-label="Girar a la derecha">&#8635;</button>
     </div>
+    <div class="visor-guardar" id="visor-guardar" hidden>
+      <button class="btn btn-verde" id="v-guardar">Guardar este giro</button>
+    </div>
     <div class="visor-tip">Doble toque alterna entre ver todo y llenar la pantalla · pellizque para acercar</div>
     <div class="visor-piezas"></div>`;
 
@@ -600,10 +605,11 @@ function abrirVisor(idMolde){
   }, {once:true});
 
   img.addEventListener('load', ()=>{
-    const r = lienzo.getBoundingClientRect();
-    const i = img.getBoundingClientRect();
-    if (!r.width || !i.width) return;
-    const aprovecha = (i.width * i.height) / (r.width * r.height);
+    const { r, w, h, base } = medidas();
+    if (!r.width || !w) return;
+    aplicar();
+    const vertical = giro === 90 || giro === 270;
+    const aprovecha = ((vertical ? h : w) * base * (vertical ? w : h) * base) / (r.width * r.height);
     /* Llenar recorta lo que sobresale. Solo vale la pena cuando el recorte es
        leve; en una pantalla ancha con foto vertical sería brutal. */
     if (aprovecha < 0.62 && escalaLlenar() <= 1.8) llenar();
@@ -611,18 +617,38 @@ function abrirVisor(idMolde){
   img.src = grande;
 
   let escala = 1, x = 0, y = 0, giro = Number(m.giro) || 0;
-  const aplicar = ()=>{ img.style.transform = `translate(${x}px, ${y}px) scale(${escala}) rotate(${giro}deg)`; };
+  const giroOriginal = giro;
+
+  /* Al girar 90° se intercambian ancho y alto: una foto apaisada girada se
+     sale del recuadro y se corta. `base` es el ajuste que la vuelve a encajar.
+     Se calcula con el tamaño natural de la imagen, no con el que ya tiene
+     aplicado el propio giro, para no morderse la cola. */
+  const medidas = ()=>{
+    const r = lienzo.getBoundingClientRect();
+    const nw = img.naturalWidth || 0, nh = img.naturalHeight || 0;
+    if (!r.width || !nw || !nh) return {r:r, w:0, h:0, base:1};
+    const encaje = Math.min(1, r.width/nw, r.height/nh);   // lo que hace object-fit
+    const w = nw * encaje, h = nh * encaje;
+    const vertical = giro === 90 || giro === 270;
+    const base = vertical ? Math.min(r.width/h, r.height/w) : 1;
+    return {r:r, w:w, h:h, base:base};
+  };
+  const aplicar = ()=>{
+    const { base } = medidas();
+    img.style.transform = `translate(${x}px, ${y}px) scale(${base * escala}) rotate(${giro}deg)`;
+  };
   /* El margen se calcula sobre el tamaño real que ocupa la imagen, no sobre el
      lienzo: una foto vertical deja franjas laterales por las que no hay que
      poder arrastrar, y una ampliada sí debe recorrerse entera. */
+  /* El margen se mide sobre lo que la foto ocupa de verdad en pantalla: una
+     foto que cabe entera no debe poder arrastrarse; una ampliada sí, toda. */
   const limitar = () => {
-    const r = lienzo.getBoundingClientRect();
-    const i = img.getBoundingClientRect();
+    const { r, w, h, base } = medidas();
     const vertical = giro === 90 || giro === 270;
-    const anchoBase = (vertical ? i.height : i.width) / escala;
-    const altoBase  = (vertical ? i.width : i.height) / escala;
-    const maxX = Math.max(0, (anchoBase * escala - r.width) / 2);
-    const maxY = Math.max(0, (altoBase * escala - r.height) / 2);
+    const ancho = (vertical ? h : w) * base * escala;
+    const alto  = (vertical ? w : h) * base * escala;
+    const maxX = Math.max(0, (ancho - r.width) / 2);
+    const maxY = Math.max(0, (alto - r.height) / 2);
     x = Math.max(-maxX, Math.min(maxX, x));
     y = Math.max(-maxY, Math.min(maxY, y));
   };
@@ -632,12 +658,11 @@ function abrirVisor(idMolde){
      "Ajustar" la muestra completa; "Llenar" la agranda hasta cubrir la pantalla
      usando el lado que le sobra. Se recalcula porque el giro intercambia lados. */
   const escalaLlenar = () => {
-    const r = lienzo.getBoundingClientRect();
-    const i = img.getBoundingClientRect();
-    if (!i.width || !i.height) return 1;
+    const { r, w, h, base } = medidas();
+    if (!w || !h) return 1;
     const vertical = giro === 90 || giro === 270;
-    const ancho = (vertical ? i.height : i.width) / escala;
-    const alto  = (vertical ? i.width : i.height) / escala;
+    const ancho = (vertical ? h : w) * base;
+    const alto  = (vertical ? w : h) * base;
     return Math.max(1, Math.min(8, Math.max(r.width / ancho, r.height / alto)));
   };
 
@@ -655,6 +680,7 @@ function abrirVisor(idMolde){
     else {
       giro = (giro + (a === 'izq' ? -90 : 90) + 360) % 360;
       ajustar();
+      v.querySelector('#visor-guardar').hidden = (giro === giroOriginal);
     }
   });
 
@@ -702,6 +728,19 @@ function abrirVisor(idMolde){
     ev.preventDefault();
     zoomA(escala * (ev.deltaY < 0 ? 1.15 : 1/1.15));
   }, {passive:false});
+
+  /* Girar aquí debe poder guardarse: es donde se ve la foto grande y donde
+     uno se da cuenta de que está acostada. */
+  v.querySelector('#v-guardar').addEventListener('click', async ev=>{
+    ev.currentTarget.disabled = true;
+    const i = moldes.findIndex(x=>x.id===m.id);
+    if (i < 0) return;
+    moldes[i] = Object.assign({}, moldes[i], {giro:giro});
+    await guardarLocal();
+    v.remove();
+    await encolar('guardarMolde', moldes[i]);
+    brindis('Giro guardado.');
+  });
 
   const conEsc = ev=>{ if (ev.key === 'Escape'){ v.remove(); document.removeEventListener('keydown', conEsc); } };
   document.addEventListener('keydown', conEsc);

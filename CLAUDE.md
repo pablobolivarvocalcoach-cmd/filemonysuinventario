@@ -163,3 +163,17 @@ sin obligar a reimportar. `Codigo.gs` sigue guardando la forma `thumbnail?id=`
 y eso está bien; el id es lo único que importa.
 
 Todo `<img>` de foto lleva `onerror` que cae de vuelta a la dirección guardada.
+
+## Fotos acostadas
+
+Varias fotos del taller están guardadas apaisadas aunque el molde sea vertical.
+Por eso existe `giro` y por eso se puede guardar desde el visor: es donde uno se
+da cuenta.
+
+`medidas()` calcula `base`, el factor que vuelve a encajar la foto cuando el giro
+es 90° o 270° e intercambia ancho y alto. Sin él, una foto apaisada girada se
+sale del lienzo y se corta. Se calcula con `naturalWidth`/`naturalHeight`, nunca
+con el rectángulo ya transformado: eso se muerde la cola.
+
+La escala que se aplica es siempre `base * escala`, donde `escala` es solo el
+zoom del usuario y 1 significa "cabe entera".
