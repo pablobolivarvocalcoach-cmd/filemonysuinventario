@@ -528,9 +528,18 @@ function visibles(){
 }
 
 /* ══════════ pintado ══════════ */
+/* La dirección de "miniatura" de Drive devuelve a veces un recorte centrado:
+   por eso las planchas salían cortadas. Esta otra respeta la foto completa.
+   Se traduce aquí, en la app, para que sirva también con las fotos ya guardadas. */
+function urlFoto(foto, ancho){
+  if (!foto) return '';
+  const id = (String(foto).match(/[?&]id=([A-Za-z0-9_-]+)/) || [])[1];
+  return id ? `https://lh3.googleusercontent.com/d/${id}=w${ancho}` : String(foto);
+}
+
 function miniatura(m, zoom){
   return `<span class="foto"${zoom && m.foto ? ` data-zoom="${esc(m.id)}" role="button" tabindex="0" aria-label="Ver la foto en grande"` : ''}>${m.foto
-    ? `<img src="${esc(m.foto)}" alt="" loading="lazy" style="transform:rotate(${Number(m.giro)||0}deg)">`
+    ? `<img src="${esc(urlFoto(m.foto, 400))}" alt="" loading="lazy" onerror="this.src='${esc(m.foto)}'" style="transform:rotate(${Number(m.giro)||0}deg)">`
     : 'SIN FOTO'}</span>`;
 }
 
@@ -540,7 +549,10 @@ function miniatura(m, zoom){
 function abrirVisor(idMolde){
   const m = moldes.find(x=>x.id===idMolde);
   if (!m || !m.foto) return;
-  const grande = String(m.foto).replace(/sz=w\d+/, 'sz=w1600');
+  /* La dirección de "miniatura" de Drive devuelve a veces un recorte centrado:
+     por eso la plancha aparecía cortada por abajo. Esta otra respeta la foto
+     completa. Si fallara, se cae de vuelta a la miniatura. */
+  const grande = urlFoto(m.foto, 1600);
   const suyas = piezasDe(m.id);
 
   const v = document.createElement('div');
@@ -583,12 +595,18 @@ function abrirVisor(idMolde){
   /* Si la foto deja mucho espacio muerto —pasa cuando la tomaron con otro
      celular, en otra orientación— se abre llenando la pantalla en vez de
      dejarla pequeña en el centro. Un toque en "Ajustar" la muestra completa. */
+  img.addEventListener('error', ()=>{
+    if (img.src !== m.foto) img.src = m.foto;
+  }, {once:true});
+
   img.addEventListener('load', ()=>{
     const r = lienzo.getBoundingClientRect();
     const i = img.getBoundingClientRect();
     if (!r.width || !i.width) return;
     const aprovecha = (i.width * i.height) / (r.width * r.height);
-    if (aprovecha < 0.62) llenar();
+    /* Llenar recorta lo que sobresale. Solo vale la pena cuando el recorte es
+       leve; en una pantalla ancha con foto vertical sería brutal. */
+    if (aprovecha < 0.62 && escalaLlenar() <= 1.8) llenar();
   }, {once:true});
   img.src = grande;
 
@@ -910,7 +928,7 @@ function abrirMolde(id){
     img.src = fuente;
     img.style.transform = `rotate(${giro}deg)`;
   };
-  pintarPrev(m.foto);
+  pintarPrev(urlFoto(m.foto, 600));
 
   const rotar = g => {
     const img = prev.querySelector('img');

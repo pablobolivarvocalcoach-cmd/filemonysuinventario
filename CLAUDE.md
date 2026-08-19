@@ -125,7 +125,9 @@ piezas del molde, y tocar una abre su ficha.
   que las tomó: **Ajustar** muestra la foto completa (escala 1, `object-fit:
   contain`) y **Llenar** la agranda hasta cubrir la pantalla. El doble toque
   alterna entre los dos. Al abrir, si la foto aprovecha menos del 62% del
-  lienzo, arranca en Llenar; si no, en Ajustar.
+  lienzo, arranca en Llenar; si no, en Ajustar. Nunca arranca en Llenar si eso
+  implicara ampliar más de 1.8x: en una pantalla ancha con foto vertical el
+  recorte sería brutal.
 - No etiquete el botón como "1:1": sugiere tamaño real en píxeles y confunde.
 - El giro del visor es temporal, para mirar. El giro que se guarda es el de la
   ficha del molde.
@@ -146,3 +148,18 @@ marca, así que la correspondencia vive en la app.
 `siguienteNumero()` en el backend y `codigoLibre()` en la app deben dar el mismo
 resultado. `renumerarMoldes()` reasigna todos en el orden actual de la hoja, para
 migrar desde la numeración vieja.
+
+## Las direcciones de foto de Drive
+
+`https://drive.google.com/thumbnail?id=X&sz=wN` devuelve **a veces un recorte
+centrado**, no la foto completa. Con las planchas del taller cortaba la fila de
+abajo. Ya pasó y costó tiempo diagnosticarlo, porque parecía un problema de CSS.
+
+Use `https://lh3.googleusercontent.com/d/{ID}=w{N}`, que respeta la proporción.
+
+La traducción se hace en la app con `urlFoto(foto, ancho)`, no en el backend: así
+funciona también con las fotos que ya estaban guardadas con la dirección vieja,
+sin obligar a reimportar. `Codigo.gs` sigue guardando la forma `thumbnail?id=`
+y eso está bien; el id es lo único que importa.
+
+Todo `<img>` de foto lleva `onerror` que cae de vuelta a la dirección guardada.
