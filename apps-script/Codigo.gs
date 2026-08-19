@@ -377,12 +377,41 @@ function analizarNombreGS(nombreArchivo) {
   };
 }
 
-function codigoGS(nombre, usados) {
-  const raiz = (limpiarGS(nombre).replace(/[^a-z0-9]/g, '').slice(0, 3).toUpperCase()) || 'MOL';
-  let i = 1, c;
-  do { c = raiz + '-' + ('0' + i).slice(-2); i++; } while (usados[c]);
-  usados[c] = 1;
-  return c;
+/**
+ * El código es un número corrido, a propósito.
+ * Uno derivado del nombre envejece mal (si renombra el molde deja de
+ * corresponder) y choca entre moldes parecidos. Este nunca cambia.
+ */
+function siguienteNumero(codigos) {
+  let max = 0;
+  Object.keys(codigos).forEach(function (c) {
+    const m = String(c).match(/^M-(\d+)$/);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return max + 1;
+}
+
+function codigoGS(n) {
+  return 'M-' + (n < 1000 ? ('00' + n).slice(-3) : n);
+}
+
+
+/**
+ * Reasigna los códigos como M-001, M-002… en el orden actual de la hoja.
+ * Úselo una sola vez si viene de la numeración vieja.
+ */
+function renumerarMoldes() {
+  const h = hoja(HOJA_MOLDES);
+  if (h.getLastRow() < 2) { Logger.log('No hay moldes que renumerar.'); return; }
+  const col = COL_MOLDES.indexOf('codigo') + 1;
+  const n = h.getLastRow() - 1;
+  const nuevos = [];
+  for (var i = 0; i < n; i++) nuevos.push([codigoGS(i + 1)]);
+  h.getRange(2, col, n, 1).setValues(nuevos);
+  const resumen = n + ' moldes renumerados: de M-001 a ' + codigoGS(n) +
+                  '.\n\nAbra la app y sincronice.';
+  Logger.log(resumen);
+  return resumen;
 }
 
 
@@ -402,6 +431,7 @@ function importarDesdeCarpeta() {
     if (nom) existentes[nom] = 1;
     if (m.codigo) usados[m.codigo] = 1;
   });
+  var proximo = siguienteNumero(usados);
 
   const nuevosMoldes = [], nuevasPiezas = [];
   let saltados = 0, revisados = 0;
@@ -425,7 +455,7 @@ function importarDesdeCarpeta() {
     const idMolde = 'm' + Date.now() + '-' + nuevosMoldes.length;
     const molde = {
       id: idMolde,
-      codigo: codigoGS(d.nombre, usados),
+      codigo: codigoGS(proximo++),
       nombre: d.nombre,
       categoria: d.categoria,
       claves: d.claves,

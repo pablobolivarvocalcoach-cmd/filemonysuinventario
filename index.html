@@ -74,7 +74,7 @@
   .ficha:active{background:#FAFAF7}
   .ficha.pend::after{content:'';position:absolute;top:7px;right:7px;width:7px;height:7px;
                      border-radius:50%;background:#E0B96E}
-  .foto{width:76px;height:76px;flex:0 0 76px;border-radius:2px;background:#F4F4F0;overflow:hidden;
+  .foto{width:92px;height:92px;flex:0 0 92px;border-radius:2px;background:#F4F4F0;overflow:hidden;
         display:flex;align-items:center;justify-content:center;font-family:var(--dato);
         font-size:9px;color:#B4B4AC;letter-spacing:.06em}
   .foto img{width:100%;height:100%;object-fit:contain;display:block}
@@ -173,6 +173,29 @@
     .brindis{animation:sube .22s ease-out}
     @keyframes sube{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
   }
+
+  .visor{position:fixed;inset:0;background:rgba(18,21,23,.97);z-index:90;
+         display:flex;flex-direction:column;touch-action:none}
+  .visor-lienzo{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+  .visor-lienzo img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center center;
+                    will-change:transform;user-select:none;-webkit-user-drag:none;pointer-events:none}
+  .visor-top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+             padding:14px 16px;color:var(--yeso-alto)}
+  .visor-top h3{font-family:var(--display);font-weight:800;font-size:16px;margin:0;
+                letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .visor-top .cod{color:rgba(232,232,227,.6);margin-top:2px}
+  .visor-x{border:none;background:transparent;color:var(--yeso-alto);font-size:30px;line-height:1;padding:0 6px}
+  .visor-bar{display:flex;gap:8px;padding:10px 16px 6px;justify-content:center}
+  .visor-bar button{width:52px;height:44px;border:1px solid rgba(232,232,227,.3);background:transparent;
+                    color:var(--yeso-alto);border-radius:3px;font-size:18px;line-height:1}
+  .visor-bar button:active{background:rgba(232,232,227,.15)}
+  .visor-piezas{max-height:26vh;overflow-y:auto;padding:6px 12px 18px;display:flex;flex-wrap:wrap;gap:7px}
+  .vp{display:flex;align-items:center;gap:7px;border:1px solid rgba(232,232,227,.26);border-radius:3px;
+      padding:7px 10px;background:transparent;color:var(--yeso-alto);font-size:13px;max-width:100%}
+  .vp b{font-family:var(--dato);font-size:11px;background:var(--yeso-alto);color:var(--pizarra);
+        border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex:0 0 22px}
+  .vp.sin{color:rgba(232,232,227,.55);font-style:italic}
+  .visor-tip{text-align:center;color:rgba(232,232,227,.5);font-size:11.5px;padding:0 16px 10px}
 
   #impresion{display:none}
   @media print{
@@ -499,10 +522,130 @@ function visibles(){
 }
 
 /* ══════════ pintado ══════════ */
-function miniatura(m){
-  return `<div class="foto">${m.foto
+function miniatura(m, zoom){
+  return `<span class="foto"${zoom && m.foto ? ` data-zoom="${esc(m.id)}" role="button" tabindex="0" aria-label="Ver la foto en grande"` : ''}>${m.foto
     ? `<img src="${esc(m.foto)}" alt="" loading="lazy" style="transform:rotate(${Number(m.giro)||0}deg)">`
-    : 'SIN FOTO'}</div>`;
+    : 'SIN FOTO'}</span>`;
+}
+
+/* Visor a pantalla completa: pellizque para acercar, doble toque para alternar,
+   arrastre para moverse. La lista de piezas queda debajo para poder numerarlas
+   mirando la plancha en grande. */
+function abrirVisor(idMolde){
+  const m = moldes.find(x=>x.id===idMolde);
+  if (!m || !m.foto) return;
+  const grande = String(m.foto).replace(/sz=w\d+/, 'sz=w1600');
+  const suyas = piezasDe(m.id);
+
+  const v = document.createElement('div');
+  v.className = 'visor';
+  v.innerHTML = `
+    <div class="visor-top">
+      <div style="min-width:0">
+        <h3></h3>
+        <div class="cod" style="font-family:var(--dato);font-size:10.5px;letter-spacing:.08em"></div>
+      </div>
+      <button class="visor-x" aria-label="Cerrar">×</button>
+    </div>
+    <div class="visor-lienzo"><img alt=""></div>
+    <div class="visor-bar">
+      <button data-a="menos" aria-label="Alejar">−</button>
+      <button data-a="reset" aria-label="Tamaño original">1:1</button>
+      <button data-a="mas" aria-label="Acercar">+</button>
+      <button data-a="izq" aria-label="Girar a la izquierda">&#8634;</button>
+      <button data-a="der" aria-label="Girar a la derecha">&#8635;</button>
+    </div>
+    <div class="visor-tip">Pellizque para acercar · doble toque para alternar · arrastre para moverse</div>
+    <div class="visor-piezas"></div>`;
+
+  v.querySelector('h3').textContent = m.nombre || 'Molde sin nombre';
+  v.querySelector('.cod').textContent = (m.codigo || '') + (suyas.length ? ` · ${suyas.length} piezas` : '');
+
+  const cajaP = v.querySelector('.visor-piezas');
+  suyas.forEach(p=>{
+    const b = document.createElement('button');
+    b.className = 'vp' + (sinNombre(p) ? ' sin' : '');
+    b.innerHTML = `<b>${esc(p.numero||'?')}</b><span></span>`;
+    b.querySelector('span').textContent = sinNombre(p) ? 'Sin nombre' : p.nombre;
+    b.addEventListener('click', ()=>{ v.remove(); abrirPieza(p.id); });
+    cajaP.appendChild(b);
+  });
+
+  const img = v.querySelector('img');
+  const lienzo = v.querySelector('.visor-lienzo');
+  img.src = grande;
+
+  let escala = 1, x = 0, y = 0, giro = Number(m.giro) || 0;
+  const aplicar = ()=>{ img.style.transform = `translate(${x}px, ${y}px) scale(${escala}) rotate(${giro}deg)`; };
+  const limitar = () => {
+    if (escala <= 1){ x = 0; y = 0; return; }
+    const r = lienzo.getBoundingClientRect();
+    const maxX = r.width * (escala - 1) / 2, maxY = r.height * (escala - 1) / 2;
+    x = Math.max(-maxX, Math.min(maxX, x));
+    y = Math.max(-maxY, Math.min(maxY, y));
+  };
+  const zoomA = n => { escala = Math.max(1, Math.min(6, n)); limitar(); aplicar(); };
+
+  v.querySelector('.visor-x').addEventListener('click', ()=>v.remove());
+  v.querySelector('.visor-bar').addEventListener('click', ev=>{
+    const b = ev.target.closest('button'); if (!b) return;
+    const a = b.dataset.a;
+    if (a === 'mas') zoomA(escala * 1.5);
+    else if (a === 'menos') zoomA(escala / 1.5);
+    else if (a === 'reset'){ escala = 1; x = 0; y = 0; aplicar(); }
+    else { giro = (giro + (a === 'izq' ? -90 : 90) + 360) % 360; aplicar(); }
+  });
+
+  /* gestos */
+  const punteros = new Map();
+  let dist0 = 0, escala0 = 1, ultTap = 0, arrastreX = 0, arrastreY = 0;
+
+  const separacion = ()=>{
+    const [a, b] = [...punteros.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+
+  lienzo.addEventListener('pointerdown', ev=>{
+    lienzo.setPointerCapture(ev.pointerId);
+    punteros.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+    if (punteros.size === 2){ dist0 = separacion(); escala0 = escala; }
+    else { arrastreX = ev.clientX - x; arrastreY = ev.clientY - y; }
+  });
+
+  lienzo.addEventListener('pointermove', ev=>{
+    if (!punteros.has(ev.pointerId)) return;
+    punteros.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+    if (punteros.size === 2 && dist0){
+      zoomA(escala0 * (separacion() / dist0));
+    } else if (punteros.size === 1 && escala > 1){
+      x = ev.clientX - arrastreX; y = ev.clientY - arrastreY;
+      limitar(); aplicar();
+    }
+  });
+
+  const soltar = ev=>{
+    punteros.delete(ev.pointerId);
+    if (punteros.size < 2) dist0 = 0;
+  };
+  lienzo.addEventListener('pointerup', soltar);
+  lienzo.addEventListener('pointercancel', soltar);
+
+  lienzo.addEventListener('click', ()=>{
+    const ahora = Date.now();
+    if (ahora - ultTap < 320){ escala > 1 ? zoomA(1) : zoomA(2.5); ultTap = 0; }
+    else ultTap = ahora;
+  });
+
+  lienzo.addEventListener('wheel', ev=>{
+    ev.preventDefault();
+    zoomA(escala * (ev.deltaY < 0 ? 1.15 : 1/1.15));
+  }, {passive:false});
+
+  const conEsc = ev=>{ if (ev.key === 'Escape'){ v.remove(); document.removeEventListener('keydown', conEsc); } };
+  document.addEventListener('keydown', conEsc);
+
+  app.appendChild(v);
+  aplicar();
 }
 
 function pintar(){
@@ -555,7 +698,7 @@ function pintar(){
     if (filtro === 'moldes'){
       const n = piezasDe(x.id).length, f = faltan(x);
       b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
-      b.innerHTML = `${miniatura(x)}
+      b.innerHTML = `${miniatura(x, true)}
         <div class="info">
           <div class="cod">${esc(x.codigo||'—')}${x.ubicacion?' · '+esc(x.ubicacion):''}</div>
           <div class="nom"></div>
@@ -570,7 +713,7 @@ function pintar(){
     } else {
       const m = moldeDe(x);
       b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
-      b.innerHTML = `${miniatura(m)}
+      b.innerHTML = `${miniatura(m, true)}
         <div class="info">
           <div class="cod">${esc(m.codigo||'—')} · pieza ${esc(x.numero||'?')}</div>
           <div class="nom${sinNombre(x)?' gris':''}"></div>
@@ -601,6 +744,18 @@ function abrir(html){
 
 let contador = 0;
 const nuevoId = pre => pre + Date.now() + '-' + (contador++);
+
+/* Número corrido. No se deriva del nombre: un código así envejece mal
+   y choca entre moldes parecidos. */
+function codigoLibre(){
+  let max = 0;
+  moldes.forEach(x=>{
+    const m = String(x.codigo||'').match(/^M-(\d+)$/);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  const n = max + 1;
+  return 'M-' + (n < 1000 ? String(n).padStart(3,'0') : n);
+}
 
 function moldeNuevo(){
   return {id:nuevoId('m'), codigo:'', nombre:'', categoria:'', claves:'', medidas:'', cavidades:0,
@@ -722,6 +877,11 @@ function abrirMolde(id){
   h.querySelector('#girarI').addEventListener('click', ()=>rotar(-90));
   h.querySelector('#girarD').addEventListener('click', ()=>rotar(90));
 
+  prev.style.cursor = 'zoom-in';
+  prev.addEventListener('click', ()=>{
+    if (prev.querySelector('img') && !fotoBase64) abrirVisor(m.id);
+  });
+
   h.querySelector('#btnFoto').addEventListener('click', ()=>h.querySelector('#archFoto').click());
   h.querySelector('#archFoto').addEventListener('change', ev=>{
     const arch = ev.target.files && ev.target.files[0];
@@ -779,7 +939,7 @@ function abrirMolde(id){
     if (!(m.nombre||'').trim()){ brindis('Escriba el nombre del molde.'); return; }
     ['cavidades','dias'].forEach(k=>{ m[k] = Number(m[k])||0; });
     m.giro = giro;
-    if (!m.codigo) m.codigo = (limpio(m.nombre).replace(/[^a-z0-9]/g,'').slice(0,3).toUpperCase()||'MOL') + '-01';
+    if (!m.codigo) m.codigo = codigoLibre();
     if (quitarFoto) m.foto = '';
 
     const i = moldes.findIndex(x=>x.id===m.id);
@@ -822,7 +982,7 @@ function abrirPieza(id){
     <div class="hoja-top"><h2>Pieza ${esc(p.numero||'')}</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
 
     <button class="ficha" id="verMolde" style="margin-bottom:16px">
-      ${miniatura(m)}
+      ${miniatura(m, true)}
       <div class="info">
         <div class="cod">${esc(m.codigo||'')}</div>
         <div class="nom" style="font-size:15px;margin-bottom:2px"></div>
@@ -859,7 +1019,11 @@ function abrirPieza(id){
 
   const h = capa.querySelector('.hoja');
   h.querySelector('#verMolde .nom').textContent = m.nombre || 'Molde sin nombre';
-  h.querySelector('#verMolde').addEventListener('click', ()=>abrirMolde(m.id));
+  h.querySelector('#verMolde').addEventListener('click', ev=>{
+    const z = ev.target.closest('[data-zoom]');
+    if (z){ ev.stopPropagation(); abrirVisor(m.id); return; }
+    abrirMolde(m.id);
+  });
 
   const campos = {'#p-nom':'nombre','#p-cla':'claves','#p-exi':'existencia','#p-num':'numero','#p-min':'minimo'};
   Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = p[k] ?? ''; });
@@ -1353,6 +1517,13 @@ $('#chips').addEventListener('click', ev=>{
   $('#chips').querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
   pintar();
 });
+$('#lista').addEventListener('click', ev=>{
+  const z = ev.target.closest('[data-zoom]');
+  if (!z) return;
+  ev.stopPropagation(); ev.preventDefault();
+  abrirVisor(z.dataset.zoom);
+}, true);
+
 $('#nuevo').addEventListener('click', ()=>abrirMolde(null));
 $('#menu').addEventListener('click', abrirMenu);
 $('#btnSync').addEventListener('click', ()=>{ config.url ? sincronizar() : abrirMenu(); });

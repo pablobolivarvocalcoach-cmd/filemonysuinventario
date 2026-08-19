@@ -103,3 +103,34 @@ constante `COL_*` correspondiente: el verificador comprueba que calcen.
 
 Dos personas editando lo mismo a la vez: gana la última en sincronizar, sin
 aviso. No lo arregle sin pedirlo.
+
+## Visor de fotos
+
+`abrirVisor(idMolde)` abre la plancha a pantalla completa. Existe porque para
+numerar las piezas hay que ver la foto grande; por eso lleva debajo la lista de
+piezas del molde, y tocar una abre su ficha.
+
+- Pide la foto en alta cambiando `sz=w600` por `sz=w1600` en la URL de Drive.
+- Gestos con Pointer Events: dos punteros para pellizcar, uno para arrastrar
+  (solo con zoom), doble toque para alternar 1x/2.5x, rueda en computador.
+- `limitar()` impide arrastrar la imagen fuera del lienzo y la recentra al
+  volver a 1x.
+- El giro del visor es temporal, para mirar. El giro que se guarda es el de la
+  ficha del molde.
+- Las miniaturas son `<span data-zoom>` dentro de un `<button>`, no botones
+  anidados (HTML inválido). El clic se intercepta en fase de captura.
+
+## El código del molde
+
+Es un número corrido: `M-001`, `M-002`… **No se deriva del nombre.** Un código
+mnemotécnico (`ABE-01`) envejece mal —si se renombra el molde deja de
+corresponder— y choca entre moldes parecidos: dos de conejos serían `CON-01` y
+`CON-02` sin que nadie sepa cuál es cuál.
+
+Su único trabajo es ser un identificador corto, estable y pronunciable
+("pásame el molde 47"). Los moldes no se marcan físicamente: el uso borra la
+marca, así que la correspondencia vive en la app.
+
+`siguienteNumero()` en el backend y `codigoLibre()` en la app deben dar el mismo
+resultado. `renumerarMoldes()` reasigna todos en el orden actual de la hoja, para
+migrar desde la numeración vieja.

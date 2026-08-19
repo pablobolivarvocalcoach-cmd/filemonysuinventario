@@ -193,6 +193,17 @@ moldes a la carpeta.
 
 ---
 
+## El código del molde
+
+La página los numera sola: `M-001`, `M-002`… No hay que escribir códigos en los
+nombres de las fotos. El nombre del archivo sirve para las piezas; el código es
+solo un identificador corto para referirse al molde.
+
+Si viene de la numeración vieja, ejecute **renumerarMoldes** una sola vez desde
+Apps Script y sincronice.
+
+---
+
 ## Quién actualiza qué
 
 **Las existencias y las ventas, desde la app.** Su esposa puede usar la misma
@@ -204,6 +215,18 @@ las piezas que salieron, y el sistema descuenta cada una.
 **Si prefiere escribir directo en la hoja**, cambie la columna `existencia` en la
 pestaña PIEZAS. La app lo recoge al sincronizar. Hágalo solo cuando el punto de
 la app esté verde.
+
+---
+
+## Ver la foto en grande
+
+Toque la miniatura de cualquier molde o pieza y la plancha se abre a pantalla
+completa. Pellizque para acercar, doble toque para alternar, arrastre para
+moverse. Debajo aparecen las piezas del molde con su número: toque una para
+abrir su ficha sin cerrar lo que está mirando.
+
+Los botones de giro del visor son solo para mirar. Para dejar la foto derecha de
+forma permanente, use los botones ↺ ↻ dentro de la ficha del molde y guarde.
 
 ---
 
