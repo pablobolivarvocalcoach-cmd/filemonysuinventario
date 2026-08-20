@@ -422,6 +422,29 @@ function renumerarMoldes() {
 
 
 /**
+ * Toma el mismo candado que doPost(), para que esta función no se cruce con
+ * una sincronización en curso desde el celular. Se usa alrededor de
+ * borrarInventario() e importarDesdeCarpeta(): ninguna de las dos pide
+ * LockService por su cuenta, porque se ejecutan a mano desde el editor, no
+ * a través de doPost.
+ */
+function conCandado(fn) {
+  const candado = LockService.getScriptLock();
+  try {
+    candado.waitLock(20000);
+  } catch (err) {
+    throw new Error('No se pudo obtener el candado en 20 segundos: hay una sincronización ' +
+                    'en curso desde algún celular. Espere un momento y ejecute de nuevo.');
+  }
+  try {
+    return fn();
+  } finally {
+    candado.releaseLock();
+  }
+}
+
+
+/**
  * Deja MOLDES y PIEZAS vacías, conservando encabezados.
  * PRODUCTOS y VENTAS no se tocan: ahí viven los precios y el historial.
  *
@@ -430,21 +453,27 @@ function renumerarMoldes() {
  * aparecen en la app como "Sin nombre / No lo tengo".
  */
 function borrarInventario() {
-  var borradas = 0;
-  [HOJA_MOLDES, HOJA_PIEZAS].forEach(function (nombre) {
-    const h = hoja(nombre);
-    const n = h.getLastRow() - 1;
-    if (n > 0) { h.deleteRows(2, n); borradas += n; }
+  return conCandado(function () {
+    var borradas = 0;
+    [HOJA_MOLDES, HOJA_PIEZAS].forEach(function (nombre) {
+      const h = hoja(nombre);
+      const n = h.getLastRow() - 1;
+      if (n > 0) { h.deleteRows(2, n); borradas += n; }
+    });
+    const resumen = borradas + ' filas borradas de MOLDES y PIEZAS.\n' +
+                    'PRODUCTOS y VENTAS quedaron intactas.\n\n' +
+                    'Ahora ejecute importarDesdeCarpeta y sincronice en la app.';
+    Logger.log(resumen);
+    return resumen;
   });
-  const resumen = borradas + ' filas borradas de MOLDES y PIEZAS.\n' +
-                  'PRODUCTOS y VENTAS quedaron intactas.\n\n' +
-                  'Ahora ejecute importarDesdeCarpeta y sincronice en la app.';
-  Logger.log(resumen);
-  return resumen;
 }
 
 
 function importarDesdeCarpeta() {
+  return conCandado(function () { return importarDesdeCarpetaInterno(); });
+}
+
+function importarDesdeCarpetaInterno() {
   const it = DriveApp.getFoldersByName(CARPETA_ORIGEN);
   if (!it.hasNext()) {
     throw new Error('No encontré en Drive una carpeta llamada "' + CARPETA_ORIGEN +
