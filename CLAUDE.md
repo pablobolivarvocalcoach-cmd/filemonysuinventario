@@ -197,3 +197,46 @@ Los moldes se muestran en cuadrícula porque el producto es visual; las piezas e
 lista, porque ahí lo que importa es el nombre y la existencia.
 
 No baje el contraste. Se usa bajo techo de zinc, con luz mala y a contraluz.
+
+## Orden y recorte de las piezas
+
+Las piezas se listan **agrupadas por molde**, con una cabecera por plancha, y
+dentro de cada grupo por su `numero`, que es el orden físico. Alfabético global
+las regaba por toda la página: las piezas de una misma plancha se producen y se
+buscan juntas.
+
+`celdaDe(molde, pieza)` calcula en qué casilla de la cuadrícula cae la pieza a
+partir de `columnas` y `cavidades`, y la miniatura muestra solo ese pedazo de la
+foto. Devuelve `null` —y entonces se muestra la plancha entera— si falta el dato
+o si `giro` no es 0: rotar y recortar a la vez desalinea la cuadrícula, y no vale
+la pena resolverlo mientras las fotos se puedan enderezar antes de subirlas.
+
+El importador supone `columnas: 2` cuando hay 4 o más piezas, que es la
+distribución más común; quien mire la foto lo corrige.
+
+## Marcado manual de piezas
+
+No se intenta detectar las formas analizando la foto. Las planchas son gris claro
+sobre fondo gris claro, con sombras suaves y fotos de baja resolución: un
+detector acertaría a medias y obligaría a revisar todo igual, pero desconfiando.
+
+En su lugar, `abrirMarcado()` deja tocar la foto para situar cada pieza. Se
+guarda en `recorte` de la pieza como `x,y,w,h` en fracciones de la imagen, y
+manda sobre la cuadrícula automática. La cuadrícula sirve de punto de partida.
+
+El recuadro se mantiene cuadrado en píxeles (`h = w * anchoNatural /
+altoNatural`); si no, la miniatura sale estirada. Y el tamaño se topa en
+`min(1, altoNatural/anchoNatural)`, porque en una foto apaisada el alto crece
+más rápido que el ancho y se saldría del borde.
+
+Marcar exige `giro === 0`, igual que el recorte por cuadrícula.
+
+## Columnas nuevas: siempre al final
+
+`crearHoja()` reescribe la fila de encabezados, pero **no** mueve los datos ya
+escritos. Si se inserta una columna en la mitad de un `COL_*`, los encabezados
+quedan corridos respecto a las filas existentes y cada campo se lee en la casilla
+del vecino. Pasó al agregar `columnas` y dejó todos los moldes sin foto.
+
+Agregue siempre al final del arreglo, aunque quede menos ordenado de leer. Las
+filas viejas devuelven vacío en la columna nueva, que es exactamente lo correcto.

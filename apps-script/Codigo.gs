@@ -25,10 +25,16 @@ const HOJA_REPORTE   = 'REPORTE';
 const CARPETA        = 'Filemon - Fotos';   // fotos tomadas desde el celular
 const CARPETA_ORIGEN = 'FILEMON MOLDES';    // sus fotos originales del taller
 
+/* IMPORTANTE: las columnas nuevas van SIEMPRE al final.
+   Insertarlas en la mitad corre los encabezados respecto a los datos que ya
+   están escritos, y la hoja empieza a leer cada campo en la casilla del vecino.
+   Ya pasó una vez y dejó los moldes sin foto. */
 const COL_MOLDES = ['id','codigo','nombre','categoria','claves','medidas','cavidades',
-                    'dias','estado','ubicacion','notas','foto','giro','actualizado'];
+                    'dias','estado','ubicacion','notas','foto','giro','actualizado',
+                    'columnas'];
 
-const COL_PIEZAS = ['id','idMolde','numero','nombre','claves','existencia','minimo','actualizado'];
+const COL_PIEZAS = ['id','idMolde','numero','nombre','claves','existencia','minimo',
+                    'actualizado','recorte'];
 
 const COL_PRODUCTOS = ['id','nombre','precio','piezas','notas','actualizado'];
 
@@ -135,7 +141,7 @@ function eliminarEn(nombreHoja, id) {
   return !!n;
 }
 
-function leerMoldes()    { return leerTabla(HOJA_MOLDES, COL_MOLDES, ['cavidades','dias','giro']); }
+function leerMoldes()    { return leerTabla(HOJA_MOLDES, COL_MOLDES, ['cavidades','columnas','dias','giro']); }
 function leerPiezas()    { return leerTabla(HOJA_PIEZAS, COL_PIEZAS, ['numero','existencia','minimo']); }
 function leerProductos() { return leerTabla(HOJA_PRODUCTOS, COL_PRODUCTOS, ['precio','piezas']); }
 
@@ -461,6 +467,7 @@ function importarDesdeCarpeta() {
       claves: d.claves,
       medidas: '',
       cavidades: d.piezas.length,   // provisional: lo confirma quien mire la foto
+      columnas: d.piezas.length >= 4 ? 2 : 1,   // la mayoría de planchas van de a dos
       dias: 2,
       estado: 'bueno',
       ubicacion: '',
@@ -480,6 +487,7 @@ function importarDesdeCarpeta() {
         claves: clavesDeGS(nombrePieza),
         existencia: 0,
         minimo: 3,
+        recorte: '',
         actualizado: ahora,
       };
       nuevasPiezas.push(COL_PIEZAS.map(function (c) { return pieza[c]; }));

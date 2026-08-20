@@ -84,6 +84,31 @@
         display:flex;align-items:center;justify-content:center;font-family:var(--dato);
         font-size:9px;color:#B4B4AC;letter-spacing:.06em}
   .foto img{width:100%;height:100%;object-fit:contain;display:block}
+  .marcador{position:relative;background:var(--yeso);border:1px solid var(--linea);
+            border-radius:10px;overflow:hidden;line-height:0;cursor:crosshair}
+  .marcador img{width:100%;display:block}
+  .marca{position:absolute;border:2px solid var(--leon-hondo);border-radius:6px;
+         background:rgba(252,180,12,.18);color:var(--melena);font-family:var(--dato);
+         font-size:11px;display:flex;align-items:flex-start;justify-content:flex-start;
+         padding:2px 4px;line-height:1;pointer-events:none}
+  .marca.viva{border-color:var(--melena);border-width:3px;background:rgba(51,34,15,.16)}
+  .tira{display:flex;flex-wrap:wrap;gap:7px}
+  .tp{display:flex;align-items:center;gap:7px;border:1px solid var(--linea);background:#fff;
+      border-radius:20px;padding:7px 11px;font-size:13px;color:var(--pizarra-2)}
+  .tp b{font-family:var(--dato);font-size:10.5px;background:var(--yeso);color:var(--tiza);
+        width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .tp.puesta b{background:var(--leon);color:var(--melena)}
+  .tp.viva{border-color:var(--melena);border-width:2px;font-weight:600;color:var(--melena)}
+
+  .foto.marcado{position:relative;overflow:hidden}
+  .foto.marcado img{position:absolute;max-width:none;
+                    width:calc(100% / var(--w));height:calc(100% / var(--h));
+                    left:calc(var(--x) / var(--w) * -100%);
+                    top:calc(var(--y) / var(--h) * -100%)}
+  .foto.celda{position:relative;overflow:hidden}
+  .foto.celda img{position:absolute;max-width:none;object-fit:cover;
+                  width:calc(var(--cols) * 100%);height:calc(var(--filas) * 100%);
+                  left:calc(var(--cx) * -100%);top:calc(var(--cy) * -100%)}
   .info{flex:1;min-width:0}
   .cod{font-family:var(--dato);font-size:10.5px;color:var(--tiza);letter-spacing:.08em}
   .nom{font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:0;
@@ -111,6 +136,18 @@
          font-family:var(--dato);font-size:10px;letter-spacing:.06em;padding:4px 8px;border-radius:20px}
   .cinta.aviso-falta{background:var(--encargo)}
   .cinta.mal{background:var(--alerta)}
+
+  .grupo{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+         background:transparent;border:none;border-bottom:1.5px solid var(--linea);
+         padding:16px 4px 7px;margin:6px 0 9px}
+  .grupo:first-child{margin-top:0}
+  .g-cod{font-family:var(--dato);font-size:10.5px;letter-spacing:.08em;color:var(--tiza);flex:0 0 auto}
+  .g-nom{font-family:var(--display);font-weight:600;font-size:15px;color:var(--melena);
+         flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .g-falta,.g-mal{flex:0 0 auto;font-family:var(--dato);font-size:9.5px;letter-spacing:.05em;
+                  padding:3px 8px;border-radius:20px;color:#fff;background:var(--encargo)}
+  .g-mal{background:var(--alerta)}
+  .g-ir{flex:0 0 auto;font-family:var(--dato);font-size:10px;color:var(--leon-hondo);letter-spacing:.05em}
 
   .vacio{text-align:center;padding:48px 26px}
   .vacio h2{font-family:var(--display);font-weight:600;font-size:21px;margin:0 0 8px;color:var(--melena)}
@@ -547,9 +584,13 @@ function visibles(){
     res = filtrar(piezas.filter(p=>ids.has(p.idMolde)));
   }
 
+  /* Agrupadas por molde: las piezas de una misma plancha se producen y se
+     buscan juntas. Dentro del molde, por su número, que es el orden físico. */
   return res.sort((a,b)=>{
-    const o = {listo:0, encargo:1, vacio:2, no:3};
-    return (o[estado(a)]-o[estado(b)]) || (a.nombre||'').localeCompare(b.nombre||'','es');
+    const ma = moldeDe(a), mb = moldeDe(b);
+    return (ma.nombre||'').localeCompare(mb.nombre||'','es')
+        || String(ma.id||'').localeCompare(String(mb.id||''))
+        || (Number(a.numero)||0) - (Number(b.numero)||0);
   });
 }
 
@@ -561,6 +602,48 @@ function urlFoto(foto, ancho){
   if (!foto) return '';
   const id = (String(foto).match(/[?&]id=([A-Za-z0-9_-]+)/) || [])[1];
   return id ? `https://lh3.googleusercontent.com/d/${id}=w${ancho}` : String(foto);
+}
+
+/* Con el número de columnas se sabe en qué casilla de la plancha cae cada
+   pieza, y la miniatura muestra solo ese pedazo. Solo se recorta con la foto
+   derecha (giro 0): rotar y recortar a la vez desalinea la cuadrícula. */
+function celdaDe(m, pieza){
+  const cols = Number(m.columnas) || 0;
+  const cav = Number(m.cavidades) || 0;
+  const n = Number(pieza.numero) || 0;
+  if (!m.foto || cols < 1 || cav < 1 || n < 1 || (Number(m.giro) || 0) !== 0) return null;
+  if (cols === 1 && cav === 1) return null;
+  const filas = Math.ceil(cav / cols);
+  if (n > cols * filas) return null;
+  return {cols:cols, filas:filas, cx:(n - 1) % cols, cy:Math.floor((n - 1) / cols)};
+}
+
+/* Muchas planchas no son cuadrícula. Quien conoce el molde marca a mano dónde
+   está cada pieza, y ese recorte manda sobre el cálculo automático. */
+function leerRecorte(pieza){
+  const p = String(pieza.recorte || '').split(',').map(Number);
+  if (p.length !== 4 || p.some(n=>!isFinite(n))) return null;
+  const [x, y, w, h] = p;
+  if (w <= 0 || h <= 0) return null;
+  return {x:x, y:y, w:w, h:h};
+}
+
+function miniaturaPieza(m, pieza){
+  const r = (Number(m.giro)||0) === 0 ? leerRecorte(pieza) : null;
+  if (r){
+    return `<span class="foto marcado" data-zoom="${esc(m.id)}" role="button" tabindex="0"
+                  aria-label="Ver la plancha completa"
+                  style="--x:${r.x};--y:${r.y};--w:${r.w};--h:${r.h}">
+        <img src="${esc(urlFoto(m.foto, 900))}" alt="" loading="lazy" onerror="this.src='${esc(m.foto)}'">
+      </span>`;
+  }
+  const c = celdaDe(m, pieza);
+  if (!c) return miniatura(m, true);
+  return `<span class="foto celda" data-zoom="${esc(m.id)}" role="button" tabindex="0"
+                aria-label="Ver la plancha completa"
+                style="--cols:${c.cols};--filas:${c.filas};--cx:${c.cx};--cy:${c.cy}">
+      <img src="${esc(urlFoto(m.foto, 900))}" alt="" loading="lazy" onerror="this.src='${esc(m.foto)}'">
+    </span>`;
 }
 
 function miniatura(m, zoom){
@@ -827,8 +910,24 @@ function pintar(){
   lista.innerHTML = '';
   const rejilla = filtro === 'moldes' ? document.createElement('div') : null;
   if (rejilla){ rejilla.className = 'rejilla'; lista.appendChild(rejilla); }
+  let moldeActual = null;
 
   res.forEach(x=>{
+    if (filtro !== 'moldes' && x.idMolde !== moldeActual){
+      moldeActual = x.idMolde;
+      const m0 = moldeDe(x);
+      const f = faltan(m0);
+      const cab = document.createElement('button');
+      cab.className = 'grupo';
+      cab.innerHTML = `<span class="g-cod">${esc(m0.codigo||'—')}</span>
+        <span class="g-nom"></span>
+        ${m0.estado !== 'bueno' ? `<span class="g-mal">${m0.estado==='danado'?'Dañado':'No lo tengo'}</span>` : ''}
+        ${f ? `<span class="g-falta">Faltan ${f}</span>` : ''}
+        <span class="g-ir">Ver molde ›</span>`;
+      cab.querySelector('.g-nom').textContent = m0.nombre || 'Sin nombre';
+      cab.addEventListener('click', ()=>abrirMolde(m0.id));
+      lista.appendChild(cab);
+    }
     const b = document.createElement('button');
     if (filtro === 'moldes'){
       const n = piezasDe(x.id).length, f = faltan(x);
@@ -852,9 +951,9 @@ function pintar(){
     {
       const m = moldeDe(x);
       b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
-      b.innerHTML = `${miniatura(m, true)}
+      b.innerHTML = `${miniaturaPieza(m, x)}
         <div class="info">
-          <div class="cod">${esc(m.codigo||'—')} · pieza ${esc(x.numero||'?')}${m.nombre?' · '+esc(m.nombre):''}</div>
+          <div class="cod">pieza ${esc(x.numero||'?')}</div>
           <div class="nom${sinNombre(x)?' gris':''}"></div>
           <div class="pie"><span class="sello ${estado(x)}">${etiqueta(x)}</span></div>
         </div>
@@ -898,11 +997,12 @@ function codigoLibre(){
 
 function moldeNuevo(){
   return {id:nuevoId('m'), codigo:'', nombre:'', categoria:'', claves:'', medidas:'', cavidades:0,
-          dias:2, estado:'bueno', ubicacion:'', notas:'', foto:'', giro:0};
+          columnas:0, dias:2, estado:'bueno', ubicacion:'', notas:'', foto:'', giro:0};
 }
 
 function piezaNueva(idMolde, numero){
-  return {id:nuevoId('z'), idMolde:idMolde, numero:numero, nombre:'', claves:'', existencia:0, minimo:3};
+  return {id:nuevoId('z'), idMolde:idMolde, numero:numero, nombre:'', claves:'',
+          existencia:0, minimo:3, recorte:''};
 }
 
 async function guardarLocal(){
@@ -949,9 +1049,14 @@ function abrirMolde(id){
       <div class="campo"><label for="m-cav">Cavidades del molde</label>
         <input id="m-cav" type="number" min="0" inputmode="numeric">
         <span class="pista">Cuántas figuras trae la plancha en total.</span></div>
-      <div class="campo"><label for="m-dia">Días para producir</label>
-        <input id="m-dia" type="number" min="0" inputmode="numeric"></div>
+      <div class="campo"><label for="m-col">Columnas de la plancha</label>
+        <input id="m-col" type="number" min="0" inputmode="numeric">
+        <span class="pista">Cuántas figuras van de lado a lado. Con ese dato, cada
+        pieza muestra su pedazo de la foto en vez de la plancha entera.</span></div>
     </div>
+
+    <div class="campo"><label for="m-dia">Días para producir</label>
+      <input id="m-dia" type="number" min="0" inputmode="numeric"></div>
 
     ${f ? `<div class="aviso">Este molde declara <b>${Number(m.cavidades)}</b> cavidades y solo tiene
             <b>${suyas.length}</b> piezas registradas. Faltan <b>${f}</b> por nombrar.</div>` : ''}
@@ -960,6 +1065,7 @@ function abrirMolde(id){
     <div class="campo"><label>Piezas de este molde</label>
       <div class="lista-piezas" id="piezas"></div>
       <button class="btn btn-borde" id="masPieza" style="width:100%;margin-top:9px">+ Agregar pieza</button>
+      <button class="btn btn-borde" id="marcar" style="width:100%;margin-top:7px">Marcar piezas sobre la foto</button>
       <span class="pista">El número corresponde a la posición en la foto. Toque una pieza para nombrarla o contarla.</span></div>`}
 
     <div class="dos">
@@ -987,8 +1093,8 @@ function abrirMolde(id){
 
   const h = capa.querySelector('.hoja');
   const campos = {'#m-nom':'nombre','#m-cod':'codigo','#m-cat':'categoria','#m-cav':'cavidades',
-                  '#m-dia':'dias','#m-est':'estado','#m-ubi':'ubicacion','#m-med':'medidas',
-                  '#m-cla':'claves','#m-not':'notas'};
+                  '#m-col':'columnas','#m-dia':'dias','#m-est':'estado','#m-ubi':'ubicacion',
+                  '#m-med':'medidas','#m-cla':'claves','#m-not':'notas'};
   Object.entries(campos).forEach(([s,k])=>{ h.querySelector(s).value = m[k] ?? ''; });
 
   h.querySelector('#cats').innerHTML =
@@ -1062,6 +1168,8 @@ function abrirMolde(id){
     };
     pintarPiezas();
 
+    h.querySelector('#marcar').addEventListener('click', ()=>abrirMarcado(m.id));
+
     h.querySelector('#masPieza').addEventListener('click', async ()=>{
       const actuales = piezasDe(m.id);
       const num = actuales.reduce((s,p)=>Math.max(s, Number(p.numero)||0), 0) + 1;
@@ -1076,7 +1184,7 @@ function abrirMolde(id){
   h.querySelector('#guardar').addEventListener('click', async ()=>{
     Object.entries(campos).forEach(([s,k])=>{ m[k] = h.querySelector(s).value; });
     if (!(m.nombre||'').trim()){ brindis('Escriba el nombre del molde.'); return; }
-    ['cavidades','dias'].forEach(k=>{ m[k] = Number(m[k])||0; });
+    ['cavidades','columnas','dias'].forEach(k=>{ m[k] = Number(m[k])||0; });
     m.giro = giro;
     if (!m.codigo) m.codigo = codigoLibre();
     if (quitarFoto) m.foto = '';
@@ -1109,6 +1217,133 @@ function abrirMolde(id){
       brindis('Molde eliminado.');
     });
   });
+}
+
+/* ══════════ marcar las piezas sobre la foto ══════════
+   Detectar las formas solo con la imagen sería frágil: planchas gris claro
+   sobre fondo gris claro. Se marca a mano, que siempre acierta y sirve para
+   cualquier forma, no solo cuadrículas. */
+function abrirMarcado(idMolde){
+  const m = moldes.find(x=>x.id===idMolde);
+  if (!m || !m.foto){ brindis('Este molde no tiene foto.'); return; }
+  if ((Number(m.giro)||0) !== 0){
+    brindis('Enderece la foto y guarde el giro antes de marcar.');
+    return;
+  }
+  const suyas = piezasDe(m.id);
+  if (!suyas.length){ brindis('Primero agregue las piezas del molde.'); return; }
+
+  const marcas = suyas.map(p=>{
+    const r = leerRecorte(p) || celdaARecorte(m, p);
+    return {id:p.id, numero:p.numero, nombre:p.nombre, r:r};
+  });
+  let actual = 0, tam = 0.3;
+
+  const capa = abrir(`
+    <div class="hoja-top"><h2>Marcar piezas</h2><button class="cerrar">×</button></div>
+    <span class="pista" style="margin:0 0 12px">Escoja una pieza abajo y toque sobre la foto
+      donde está. Ajuste el tamaño con − y +.</span>
+    <div class="marcador" id="marcador"><img alt=""></div>
+    <div class="acciones" style="margin-top:12px">
+      <button class="btn btn-borde" id="mm">− Tamaño</button>
+      <button class="btn btn-borde" id="mM">+ Tamaño</button>
+      <button class="btn btn-borde" id="mQ">Quitar</button>
+    </div>
+    <div class="campo" style="margin-top:16px"><label>Piezas</label>
+      <div class="tira" id="tira"></div></div>
+    <div class="acciones">
+      <button class="btn btn-primario" id="mOk">Guardar marcas</button>
+    </div>`);
+
+  const h = capa.querySelector('.hoja');
+  const caja = h.querySelector('#marcador');
+  const img = caja.querySelector('img');
+  img.src = urlFoto(m.foto, 1200);
+
+  const pintarMarcas = ()=>{
+    caja.querySelectorAll('.marca').forEach(e=>e.remove());
+    marcas.forEach((mk, i)=>{
+      if (!mk.r) return;
+      const d = document.createElement('span');
+      d.className = 'marca' + (i === actual ? ' viva' : '');
+      d.style.cssText = `left:${mk.r.x*100}%;top:${mk.r.y*100}%;width:${mk.r.w*100}%;height:${mk.r.h*100}%`;
+      d.textContent = mk.numero;
+      caja.appendChild(d);
+    });
+    h.querySelectorAll('.tp').forEach((b,i)=>{
+      b.classList.toggle('viva', i === actual);
+      b.classList.toggle('puesta', !!marcas[i].r);
+    });
+  };
+
+  const tira = h.querySelector('#tira');
+  marcas.forEach((mk,i)=>{
+    const b = document.createElement('button');
+    b.className = 'tp';
+    b.innerHTML = `<b>${esc(mk.numero)}</b><span></span>`;
+    b.querySelector('span').textContent = mk.nombre || 'Sin nombre';
+    b.addEventListener('click', ()=>{ actual = i; pintarMarcas(); });
+    tira.appendChild(b);
+  });
+
+  /* Cuadrado en píxeles de la foto: si no, la miniatura sale estirada. */
+  const ponerEn = (fx, fy)=>{
+    const w = Math.min(tam, topeTam());
+    const h2 = w * (img.naturalWidth || 1) / (img.naturalHeight || 1);
+    const mk = marcas[actual];
+    mk.r = {
+      x: Math.max(0, Math.min(1 - w, fx - w/2)),
+      y: Math.max(0, Math.min(1 - h2, fy - h2/2)),
+      w: w, h: h2,
+    };
+    pintarMarcas();
+  };
+
+  caja.addEventListener('click', ev=>{
+    const r = img.getBoundingClientRect();
+    if (!r.width) return;
+    ponerEn((ev.clientX - r.left)/r.width, (ev.clientY - r.top)/r.height);
+  });
+
+  /* El recuadro es cuadrado en píxeles, así que en una foto apaisada el alto
+     crece más rápido que el ancho: hay que topar el tamaño o se sale del borde. */
+  const topeTam = ()=>Math.min(1, (img.naturalHeight || 1) / (img.naturalWidth || 1));
+
+  const reajustar = f=>{
+    tam = Math.max(0.08, Math.min(topeTam(), tam * f));
+    const mk = marcas[actual];
+    if (mk.r) ponerEn(mk.r.x + mk.r.w/2, mk.r.y + mk.r.h/2);
+  };
+  h.querySelector('#mm').addEventListener('click', ()=>reajustar(1/1.15));
+  h.querySelector('#mM').addEventListener('click', ()=>reajustar(1.15));
+  h.querySelector('#mQ').addEventListener('click', ()=>{ marcas[actual].r = null; pintarMarcas(); });
+
+  img.addEventListener('load', pintarMarcas, {once:true});
+  pintarMarcas();
+
+  h.querySelector('#mOk').addEventListener('click', async ev=>{
+    ev.currentTarget.disabled = true;
+    const cambiadas = [];
+    marcas.forEach(mk=>{
+      const p = piezas.find(x=>x.id===mk.id);
+      if (!p) return;
+      const nuevo = mk.r
+        ? [mk.r.x, mk.r.y, mk.r.w, mk.r.h].map(n=>Math.round(n*10000)/10000).join(',')
+        : '';
+      if (String(p.recorte||'') !== nuevo){ p.recorte = nuevo; cambiadas.push(p); }
+    });
+    await guardarLocal();
+    cerrar();
+    for (const p of cambiadas) await encolar('guardarPieza', p);
+    brindis(cambiadas.length ? `${cambiadas.length} piezas marcadas.` : 'Sin cambios.');
+  });
+}
+
+/* La cuadrícula sirve de punto de partida para el marcado manual. */
+function celdaARecorte(m, pieza){
+  const c = celdaDe(m, pieza);
+  if (!c) return null;
+  return {x:c.cx/c.cols, y:c.cy/c.filas, w:1/c.cols, h:1/c.filas};
 }
 
 /* ══════════ pieza ══════════ */
