@@ -99,6 +99,13 @@ interpreta.
 `node verificar.mjs` en verde. Si agrega un campo, agréguelo también a la
 constante `COL_*` correspondiente: el verificador comprueba que calcen.
 
+Suba también la fecha en `VERSION`, en cualquier cambio a `Codigo.gs`. Es lo
+único que le permite a la dueña, al mirar el registro de ejecución en Apps
+Script, confirmar que lo que corrió es lo que usted acaba de pegar — y no una
+copia de antes. `Codigo.gs` se pega a mano en el editor (nada lo sincroniza
+solo con el repositorio); confundir versiones así ya hizo que `borrarInventario`
+corriera sin el respaldo que se supone que la protegía.
+
 ## Limitación aceptada
 
 Dos personas editando lo mismo a la vez: gana la última en sincronizar, sin
@@ -240,3 +247,11 @@ del vecino. Pasó al agregar `columnas` y dejó todos los moldes sin foto.
 
 Agregue siempre al final del arreglo, aunque quede menos ordenado de leer. Las
 filas viejas devuelven vacío en la columna nueva, que es exactamente lo correcto.
+
+`npm run check` congela el orden actual de `COL_MOLDES`, `COL_PIEZAS`,
+`COL_PRODUCTOS` y `COL_VENTAS` en `ORDEN_ESPERADO`, dentro de `verificar.mjs`, y
+falla si el orden real no calza con ese congelado — no solo si cambia el
+conjunto de columnas. Al agregar una columna de verdad al final, actualice
+`ORDEN_ESPERADO` a mano en `verificar.mjs` en el mismo cambio; si el verificador
+falla y usted no agregó nada, es la señal de que algo movió una columna de
+lugar y hay que revisar antes de reimportar.
