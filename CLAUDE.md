@@ -177,3 +177,23 @@ con el rectángulo ya transformado: eso se muerde la cola.
 
 La escala que se aplica es siempre `base * escala`, donde `escala` es solo el
 zoom del usuario y 1 significa "cabe entera".
+
+## Identidad visual
+
+La paleta sale del logo, no de un gusto abstracto: melena `#33220F`, león
+`#FCB40C`, hocico `#FCE4B4`, palabra `#A86C18`. El fondo es crema cálido
+`#F6EEDF`. Tipografía de titulares **Fredoka**, que recoge el trazo redondeado
+del logotipo; texto en Public Sans y códigos en mono, que aporta el aire de
+libro de inventario.
+
+`icono.png` es la cabeza del león recortada. Sirve de favicon y de icono al
+agregar a pantalla de inicio.
+
+Cuidado con un choque: el ámbar es color de marca **y** era el color del estado
+"por encargo". Los estados usan verde, naranja quemado y rojo ladrillo; el ámbar
+queda reservado para acciones y acentos.
+
+Los moldes se muestran en cuadrícula porque el producto es visual; las piezas en
+lista, porque ahí lo que importa es el nombre y la existencia.
+
+No baje el contraste. Se usa bajo techo de zinc, con luz mala y a contraluz.

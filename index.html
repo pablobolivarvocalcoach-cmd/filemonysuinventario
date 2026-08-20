@@ -3,34 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2B3439">
+<meta name="theme-color" content="#33220F">
 <title>Filemón · Inventario</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="icono.png">
+<link rel="apple-touch-icon" href="icono.png">
 <style>
   :root{
-    --yeso:#E8E8E3; --yeso-alto:#F4F4F0; --pizarra:#2B3439; --pizarra-2:#3C484E;
-    --grafito:#1A1F22; --tiza:#8C948F; --linea:#CFCFC7;
-    --listo:#146B52; --encargo:#A2620A; --alerta:#97302C; --tinta:#1F5F6B;
-    --display:'Bricolage Grotesque',system-ui,sans-serif;
+    /* Sacada del logo: melena #301800, león #FCB40C, hocico #FCE4B4, palabra #A86C18 */
+    --yeso:#F6EEDF; --yeso-alto:#FDF8EF; --pizarra:#33220F; --pizarra-2:#5A4630;
+    --grafito:#241708; --tiza:#96866C; --linea:#E2D5BE;
+    --melena:#33220F; --leon:#FCB40C; --leon-hondo:#D89100; --hocico:#FCE4B4;
+    --listo:#1F6B4A; --encargo:#B8651A; --alerta:#9E3025; --tinta:#A86C18;
+    --display:'Fredoka',system-ui,sans-serif;
     --texto:'Public Sans',system-ui,sans-serif;
     --dato:'IBM Plex Mono',ui-monospace,monospace;
   }
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{font-family:var(--texto);color:var(--grafito);background:var(--yeso);
-       background-image:radial-gradient(rgba(255,255,255,.55) 1px,transparent 1px);
-       background-size:4px 4px;-webkit-font-smoothing:antialiased}
+       background-image:radial-gradient(rgba(255,255,255,.6) 1px,transparent 1px);
+       background-size:5px 5px;-webkit-font-smoothing:antialiased}
   #app{max-width:720px;margin:0 auto;min-height:100vh;padding-bottom:104px}
   button{font-family:inherit;cursor:pointer}
   input,textarea,select{font-family:inherit;font-size:16px}
-  :focus-visible{outline:2.5px solid var(--tinta);outline-offset:2px}
+  :focus-visible{outline:2.5px solid var(--leon-hondo);outline-offset:2px}
 
   .top{background:var(--pizarra);color:var(--yeso-alto);padding:16px 18px 14px;
        position:sticky;top:0;z-index:40;box-shadow:0 6px 18px rgba(43,52,57,.16)}
   .marca{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
-  .marca h1{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin:0;color:#fff}
+  .marca-izq{display:flex;align-items:center;gap:9px;min-width:0}
+  .leon{width:34px;height:34px;flex:0 0 34px;object-fit:contain;display:block}
+  .marca h1{font-family:var(--display);font-weight:600;font-size:21px;letter-spacing:0;margin:0;color:#fff}
   .sync{display:flex;align-items:center;gap:7px;background:none;border:none;font-family:var(--dato);
         font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(232,232,227,.75);padding:6px 4px}
   .punto{width:8px;height:8px;border-radius:50%;background:var(--tiza);flex:0 0 8px}
@@ -39,7 +45,7 @@
   @keyframes late{50%{opacity:.35}}
 
   .buscar{position:relative}
-  .buscar input{width:100%;padding:15px 44px 15px 16px;border:none;border-radius:3px;
+  .buscar input{width:100%;padding:15px 44px 15px 16px;border:none;border-radius:10px;
                 background:var(--yeso-alto);color:var(--grafito);font-size:17px;font-weight:500}
   .buscar input::placeholder{color:#9A9A93;font-weight:400}
   .limpiar{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;
@@ -48,51 +54,69 @@
   .chips{display:flex;gap:7px;margin-top:11px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
   .chip{flex:0 0 auto;font-family:var(--dato);font-size:11px;letter-spacing:.06em;padding:7px 11px;
-        border-radius:2px;border:1px solid rgba(232,232,227,.28);background:transparent;
+        border-radius:20px;border:1px solid rgba(253,248,239,.3);background:transparent;
         color:rgba(232,232,227,.82);text-transform:uppercase}
   .chip[aria-pressed="true"]{background:var(--yeso-alto);color:var(--pizarra);border-color:var(--yeso-alto);font-weight:600}
 
   .respuesta{margin:14px 14px 0;background:#fff;border:1px solid var(--linea);
-             border-left:5px solid var(--tinta);border-radius:3px;padding:15px 16px}
+             border-left:5px solid var(--leon);border-radius:8px;padding:15px 16px}
   .eyebrow{font-family:var(--dato);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
            color:var(--tiza);display:block;margin-bottom:9px}
   .respuesta p{margin:0 0 13px;font-size:15px;line-height:1.55;white-space:pre-wrap}
-  .copiar{width:100%;padding:12px;border:none;border-radius:3px;background:var(--pizarra);color:#fff;
+  .copiar{width:100%;padding:13px;border:none;border-radius:8px;background:var(--pizarra);color:#fff;
           font-family:var(--dato);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
   .copiar.ok{background:var(--listo)}
 
   .sello{display:inline-block;font-family:var(--dato);font-weight:600;font-size:10.5px;letter-spacing:.1em;
-         text-transform:uppercase;padding:4px 8px;border:1.5px solid currentColor;border-radius:2px}
+         text-transform:uppercase;padding:4px 10px;border:1.5px solid currentColor;border-radius:20px}
   .sello.listo{color:var(--listo)} .sello.encargo{color:var(--encargo)}
   .sello.no{color:var(--alerta)} .sello.vacio{color:var(--tiza)}
 
   .cuerpo{padding:14px}
   .conteo{font-family:var(--dato);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
           color:var(--tiza);margin:4px 2px 11px}
-  .ficha{display:flex;gap:13px;background:#fff;border:1px solid var(--linea);border-radius:3px;
+  .ficha{display:flex;gap:13px;background:#fff;border:1px solid var(--linea);border-radius:10px;
          padding:11px;margin-bottom:9px;width:100%;text-align:left;position:relative;align-items:center}
   .ficha:active{background:#FAFAF7}
   .ficha.pend::after{content:'';position:absolute;top:7px;right:7px;width:7px;height:7px;
                      border-radius:50%;background:#E0B96E}
-  .foto{width:92px;height:92px;flex:0 0 92px;border-radius:2px;background:#F4F4F0;overflow:hidden;
+  .foto{width:92px;height:92px;flex:0 0 92px;border-radius:7px;background:var(--yeso);overflow:hidden;
         display:flex;align-items:center;justify-content:center;font-family:var(--dato);
         font-size:9px;color:#B4B4AC;letter-spacing:.06em}
   .foto img{width:100%;height:100%;object-fit:contain;display:block}
   .info{flex:1;min-width:0}
   .cod{font-family:var(--dato);font-size:10.5px;color:var(--tiza);letter-spacing:.08em}
-  .nom{font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em;
-       margin:2px 0 6px;line-height:1.2;overflow-wrap:anywhere}
+  .nom{font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:0;
+       margin:3px 0 7px;line-height:1.18;overflow-wrap:anywhere;color:var(--melena)}
   .nom.gris{color:var(--tiza);font-style:italic}
   .pie{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .cant{flex:0 0 auto;text-align:center;padding-left:8px;border-left:1px solid var(--linea);min-width:56px}
-  .cant b{font-family:var(--display);font-weight:800;font-size:24px;line-height:1}
+  .cant b{font-family:var(--display);font-weight:700;font-size:26px;line-height:1;color:var(--melena)}
   .cant span{display:block;font-family:var(--dato);font-size:9px;color:var(--tiza);letter-spacing:.08em;margin-top:3px}
 
+  /* Los moldes se ven en cuadrícula: el producto es visual y la foto manda. */
+  .rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  @media (min-width:560px){ .rejilla{grid-template-columns:repeat(3,1fr)} }
+  .tarjeta-molde{background:#fff;border:1px solid var(--linea);border-radius:10px;overflow:hidden;
+                 padding:0;text-align:left;width:100%;position:relative;display:block}
+  .tarjeta-molde:active{background:#FFFCF6}
+  .tarjeta-molde .lienzo{aspect-ratio:1;background:var(--yeso);display:flex;
+                         align-items:center;justify-content:center;overflow:hidden}
+  .tarjeta-molde .lienzo img{width:100%;height:100%;object-fit:contain;display:block}
+  .tarjeta-molde .lienzo span{font-family:var(--dato);font-size:10px;color:var(--tiza)}
+  .tarjeta-molde .txt{padding:10px 11px 12px}
+  .tarjeta-molde .nom{font-size:15.5px;margin:2px 0 6px}
+  .tarjeta-molde .cod{font-family:var(--dato);font-size:10px;color:var(--tiza);letter-spacing:.08em}
+  .cinta{position:absolute;top:8px;right:8px;background:var(--melena);color:var(--yeso-alto);
+         font-family:var(--dato);font-size:10px;letter-spacing:.06em;padding:4px 8px;border-radius:20px}
+  .cinta.aviso-falta{background:var(--encargo)}
+  .cinta.mal{background:var(--alerta)}
+
   .vacio{text-align:center;padding:48px 26px}
-  .vacio h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0 0 8px}
+  .vacio h2{font-family:var(--display);font-weight:600;font-size:21px;margin:0 0 8px;color:var(--melena)}
   .vacio p{color:var(--pizarra-2);font-size:14.5px;line-height:1.6;margin:0 0 20px}
 
-  .btn{border:none;border-radius:3px;padding:13px 18px;font-family:var(--dato);
+  .btn{border:none;border-radius:8px;padding:13px 18px;font-family:var(--dato);
        font-size:12px;letter-spacing:.1em;text-transform:uppercase}
   .btn-primario{background:var(--pizarra);color:#fff}
   .btn-borde{background:transparent;color:var(--pizarra);border:1.5px solid var(--pizarra)}
@@ -102,30 +126,30 @@
 
   .flotante{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:45;display:flex;gap:9px}
   .flotante .btn{box-shadow:0 5px 16px rgba(43,52,57,.3);padding:14px 18px}
-  .btn-mas{background:var(--tinta);color:#fff}
+  .btn-mas{background:var(--leon);color:var(--melena);font-weight:600}
 
   .capa{position:fixed;inset:0;background:rgba(26,31,34,.55);z-index:60;
         display:flex;align-items:flex-end;justify-content:center}
   .hoja{background:var(--yeso-alto);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;
-        border-radius:10px 10px 0 0;padding:20px 18px 30px}
+        border-radius:18px 18px 0 0;padding:20px 18px 30px}
   .hoja-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
-  .hoja-top h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;letter-spacing:-.02em}
+  .hoja-top h2{font-family:var(--display);font-weight:600;font-size:21px;margin:0;color:var(--melena)}
   .cerrar{border:none;background:transparent;font-size:27px;line-height:1;color:var(--tiza);padding:0 4px}
 
   .campo{margin-bottom:14px}
   .campo label{display:block;font-family:var(--dato);font-size:10px;letter-spacing:.12em;
                text-transform:uppercase;color:var(--pizarra-2);margin-bottom:5px}
-  .campo input,.campo textarea,.campo select{width:100%;padding:11px 12px;border:1px solid var(--linea);
-                                             border-radius:3px;background:#fff;color:var(--grafito)}
+  .campo input,.campo textarea,.campo select{width:100%;padding:12px 13px;border:1px solid var(--linea);
+                                             border-radius:9px;background:#fff;color:var(--grafito)}
   .campo textarea{resize:vertical;min-height:58px;line-height:1.5}
   .pista{display:block;margin-top:5px;font-size:12px;color:var(--tiza);line-height:1.45;
          font-family:var(--texto);letter-spacing:0;text-transform:none}
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
   .contador{display:flex;align-items:center;gap:12px}
-  .contador button{width:46px;height:46px;border:1.5px solid var(--pizarra);background:#fff;
-                   border-radius:3px;font-size:22px;line-height:1;color:var(--pizarra)}
-  .contador input{flex:1;text-align:center;font-family:var(--display);font-weight:800;font-size:24px}
+  .contador button{width:48px;height:48px;border:1.5px solid var(--pizarra);background:#fff;
+                   border-radius:9px;font-size:22px;line-height:1;color:var(--pizarra)}
+  .contador input{flex:1;text-align:center;font-family:var(--display);font-weight:700;font-size:24px}
 
   .foto-caja{display:flex;gap:13px;align-items:flex-start;margin-bottom:16px;padding:13px;
              background:#fff;border:1px solid var(--linea);border-radius:3px}
@@ -137,7 +161,7 @@
   .girar button{flex:1;padding:10px;border:1.5px solid var(--pizarra);background:#fff;
                 border-radius:3px;font-size:17px;line-height:1;color:var(--pizarra)}
 
-  .lista-piezas{background:#fff;border:1px solid var(--linea);border-radius:3px;overflow:hidden}
+  .lista-piezas{background:#fff;border:1px solid var(--linea);border-radius:10px;overflow:hidden}
   .pieza{display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid var(--linea);
          width:100%;text-align:left;background:none;border-left:none;border-right:none;border-top:none}
   .pieza:last-child{border-bottom:none}
@@ -150,19 +174,19 @@
   .pieza .e{flex:0 0 auto;font-family:var(--dato);font-size:12px;color:var(--pizarra-2)}
 
   .aviso{background:#fff;border:1px solid var(--linea);border-left:4px solid var(--encargo);
-         padding:12px 13px;border-radius:3px;font-size:13.5px;line-height:1.55;margin-bottom:14px}
+         padding:12px 14px;border-radius:9px;font-size:13.5px;line-height:1.55;margin-bottom:14px}
   .acciones{display:flex;gap:9px;margin-top:20px}
   .acciones .btn{flex:1}
 
   .tarjetas{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
-  .tarjeta{background:#fff;border:1px solid var(--linea);border-radius:3px;padding:13px}
-  .tarjeta b{font-family:var(--display);font-weight:800;font-size:26px;line-height:1;display:block}
+  .tarjeta{background:#fff;border:1px solid var(--linea);border-radius:10px;padding:14px}
+  .tarjeta b{font-family:var(--display);font-weight:700;font-size:28px;line-height:1;display:block;color:var(--melena)}
   .tarjeta span{font-family:var(--dato);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
                 color:var(--tiza);margin-top:5px;display:block}
 
   .barra{display:flex;align-items:center;gap:9px;margin-bottom:6px;font-size:13px}
   .barra span:first-child{flex:0 0 62px;font-family:var(--dato);font-size:11px;color:var(--pizarra-2)}
-  .barra i{display:block;height:16px;background:var(--tinta);border-radius:1px;min-width:2px}
+  .barra i{display:block;height:16px;background:var(--leon-hondo);border-radius:2px;min-width:2px}
   .barra .val{flex:0 0 auto;font-family:var(--dato);font-size:11px;color:var(--tiza)}
   .barra.pico i{background:var(--encargo)}
 
@@ -182,7 +206,7 @@
                     will-change:transform;user-select:none;-webkit-user-drag:none;pointer-events:none}
   .visor-top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
              padding:12px 16px 8px;color:var(--yeso-alto)}
-  .visor-top h3{font-family:var(--display);font-weight:800;font-size:16px;margin:0;
+  .visor-top h3{font-family:var(--display);font-weight:600;font-size:17px;margin:0;
                 letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .visor-top .cod{color:rgba(232,232,227,.6);margin-top:2px}
   .visor-x{border:none;background:transparent;color:var(--yeso-alto);font-size:30px;line-height:1;padding:0 6px}
@@ -210,7 +234,7 @@
     .top,.flotante,.capa,.brindis,#panel,.cuerpo{display:none !important}
     #app{padding:0;max-width:none;background:#fff}
     #impresion{display:block;color:#000;font-size:11pt}
-    #impresion h1{font-family:var(--display);font-size:20pt;margin:0 0 2pt}
+    #impresion h1{font-family:var(--display);font-weight:700;font-size:20pt;margin:0 0 2pt}
     #impresion h2{font-family:var(--display);font-size:12pt;margin:16pt 0 5pt;
                   border-bottom:1pt solid #999;padding-bottom:3pt}
     #impresion table{width:100%;border-collapse:collapse;font-size:9.5pt}
@@ -227,7 +251,7 @@
 <div id="app">
   <div class="top">
     <div class="marca">
-      <h1>Filemón</h1>
+      <div class="marca-izq"><img src="icono.png" alt="" class="leon"><h1>Filemón</h1></div>
       <button class="sync" id="btnSync"><span class="punto" id="punto"></span><span id="txtSync">Sin conectar</span></button>
     </div>
     <div class="buscar">
@@ -579,6 +603,11 @@ function abrirVisor(idMolde){
     <div class="visor-guardar" id="visor-guardar" hidden>
       <button class="btn btn-verde" id="v-guardar">Guardar este giro</button>
     </div>
+    <div class="visor-guardar">
+      <button class="btn" id="v-molde"
+              style="background:transparent;color:var(--yeso-alto);border:1px solid rgba(232,232,227,.35)">
+        Abrir el molde para editarlo</button>
+    </div>
     <div class="visor-tip">Doble toque alterna entre ver todo y llenar la pantalla · pellizque para acercar</div>
     <div class="visor-piezas"></div>`;
 
@@ -742,6 +771,8 @@ function abrirVisor(idMolde){
     brindis('Giro guardado.');
   });
 
+  v.querySelector('#v-molde').addEventListener('click', ()=>{ v.remove(); abrirMolde(m.id); });
+
   const conEsc = ev=>{ if (ev.key === 'Escape'){ v.remove(); document.removeEventListener('keydown', conEsc); } };
   document.addEventListener('keydown', conEsc);
 
@@ -794,29 +825,36 @@ function pintar(){
   }
 
   lista.innerHTML = '';
+  const rejilla = filtro === 'moldes' ? document.createElement('div') : null;
+  if (rejilla){ rejilla.className = 'rejilla'; lista.appendChild(rejilla); }
+
   res.forEach(x=>{
     const b = document.createElement('button');
     if (filtro === 'moldes'){
       const n = piezasDe(x.id).length, f = faltan(x);
-      b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
-      b.innerHTML = `${miniatura(x, true)}
-        <div class="info">
+      const roto = x.estado !== 'bueno';
+      b.className = 'tarjeta-molde' + (pend.has(String(x.id)) ? ' pend' : '');
+      b.innerHTML = `
+        <div class="lienzo">${x.foto
+          ? `<img src="${esc(urlFoto(x.foto, 500))}" alt="" loading="lazy" onerror="this.src='${esc(x.foto)}'" style="transform:rotate(${Number(x.giro)||0}deg)">`
+          : '<span>SIN FOTO</span>'}</div>
+        <span class="cinta${roto ? ' mal' : (f ? ' aviso-falta' : '')}">${
+          roto ? (x.estado==='danado' ? 'Dañado' : 'No lo tengo') : (f ? `Faltan ${f}` : `${n} piezas`)}</span>
+        <div class="txt">
           <div class="cod">${esc(x.codigo||'—')}${x.ubicacion?' · '+esc(x.ubicacion):''}</div>
           <div class="nom"></div>
-          <div class="pie">
-            ${x.estado==='bueno' ? '' : `<span class="sello no">${x.estado==='danado'?'Molde dañado':'No lo tengo'}</span>`}
-            ${f ? `<span class="sello vacio">Faltan ${f}</span>` : ''}
-          </div>
-        </div>
-        <div class="cant"><b>${n}</b><span>PIEZAS</span></div>`;
+        </div>`;
       b.querySelector('.nom').textContent = x.nombre || 'Sin nombre';
       b.addEventListener('click', ()=>abrirMolde(x.id));
-    } else {
+      rejilla.appendChild(b);
+      return;
+    }
+    {
       const m = moldeDe(x);
       b.className = 'ficha' + (pend.has(String(x.id)) ? ' pend' : '');
       b.innerHTML = `${miniatura(m, true)}
         <div class="info">
-          <div class="cod">${esc(m.codigo||'—')} · pieza ${esc(x.numero||'?')}</div>
+          <div class="cod">${esc(m.codigo||'—')} · pieza ${esc(x.numero||'?')}${m.nombre?' · '+esc(m.nombre):''}</div>
           <div class="nom${sinNombre(x)?' gris':''}"></div>
           <div class="pie"><span class="sello ${estado(x)}">${etiqueta(x)}</span></div>
         </div>
@@ -1087,7 +1125,7 @@ function abrirPieza(id){
       <div class="info">
         <div class="cod">${esc(m.codigo||'')}</div>
         <div class="nom" style="font-size:15px;margin-bottom:2px"></div>
-        <div class="pista" style="margin:0">Toque para abrir el molde</div>
+        <div class="pista" style="margin:0">Toque aquí para abrir el molde y agregar piezas</div>
       </div>
     </button>
 
