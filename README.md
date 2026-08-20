@@ -250,6 +250,42 @@ lo llama temporada.
 
 ---
 
+## Respaldo automático diario
+
+`respaldarInventario()` copia MOLDES, PIEZAS, PRODUCTOS y VENTAS a una hoja de
+cálculo nueva, con la fecha en el nombre, dentro de una carpeta de Drive llamada
+**Filemon - Respaldos**. Guarda las últimas 30 copias y borra las más viejas
+solo, para no llenarle el Drive.
+
+Para que corra sola todos los días, sin que nadie tenga que acordarse:
+
+1. Abra el editor de Apps Script (**Extensiones → Apps Script** desde su hoja).
+2. En el menú de la izquierda, toque el ícono del reloj ⏰ (**Activadores**).
+3. Abajo a la derecha, **+ Agregar activador**.
+4. Configure así:
+   - Función a ejecutar: **respaldarInventario**
+   - Fuente del evento: **Basado en tiempo**
+   - Tipo de activador basado en tiempo: **Temporizador de día**
+   - Hora del día: la que prefiera (por ejemplo, entre la medianoche y la 1 a.m.,
+     cuando nadie está usando la app).
+5. **Guardar**. Google le va a pedir permisos la primera vez: acéptelos igual que
+   hizo con `prepararHoja`.
+
+Con eso queda instalado — no hay que volver a tocarlo. Si algún día quiere
+revisar que sí está corriendo, en el mismo editor vaya al ícono de **Ejecuciones**
+(el de la lista, junto al del reloj) y busque `respaldarInventario`.
+
+**Si el respaldo falla un día** (por ejemplo, porque le retiraron permisos, o
+alguien borró sin querer la hoja MOLDES), Apps Script le manda un correo
+automático avisando que la ejecución falló — revíselo ahí. El motivo exacto
+queda también en el Registro (Logger) de esa ejecución, con un mensaje que
+empieza con "RESPALDO FALLIDO".
+
+`borrarInventario()` también guarda un respaldo por su cuenta, justo antes de
+borrar, cada vez que se ejecuta — no hace falta hacer nada aparte para eso.
+
+---
+
 ## Antes de publicar
 
 ```bash

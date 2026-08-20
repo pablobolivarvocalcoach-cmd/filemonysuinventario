@@ -22,8 +22,11 @@ const HOJA_PRODUCTOS = 'PRODUCTOS';
 const HOJA_VENTAS    = 'VENTAS';
 const HOJA_REPORTE   = 'REPORTE';
 
-const CARPETA        = 'Filemon - Fotos';   // fotos tomadas desde el celular
-const CARPETA_ORIGEN = 'FILEMON MOLDES';    // sus fotos originales del taller
+const CARPETA        = 'Filemon - Fotos';    // fotos tomadas desde el celular
+const CARPETA_ORIGEN = 'FILEMON MOLDES';     // sus fotos originales del taller
+const CARPETA_RESPALDOS = 'Filemon - Respaldos';  // copias diarias de MOLDES/PIEZAS/PRODUCTOS/VENTAS
+
+const MAX_RESPALDOS = 30;   // cuántas copias diarias se conservan antes de borrar las más viejas
 
 /* IMPORTANTE: las columnas nuevas van SIEMPRE al final.
    Insertarlas en la mitad corre los encabezados respecto a los datos que ya
@@ -421,6 +424,69 @@ function renumerarMoldes() {
 }
 
 
+/* ══════════════════════════════════════════════════════════════
+   RESPALDOS
+
+   respaldarInventario() copia MOLDES, PIEZAS, PRODUCTOS y VENTAS a una
+   hoja de cálculo nueva, fechada, dentro de la carpeta de Drive
+   "Filemon - Respaldos". Instálela como activador diario (Editor de Apps
+   Script → reloj ⏰ Activadores → Agregar activador → función
+   respaldarInventario → basado en tiempo → cada día) para tener respaldo
+   sin que nadie tenga que acordarse. Conserva las últimas MAX_RESPALDOS
+   copias y borra las más viejas para no llenar el Drive.
+   ══════════════════════════════════════════════════════════════ */
+
+const TABLAS_RESPALDO = [HOJA_MOLDES, HOJA_PIEZAS, HOJA_PRODUCTOS, HOJA_VENTAS];
+
+function carpetaRespaldos() {
+  const it = DriveApp.getFoldersByName(CARPETA_RESPALDOS);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(CARPETA_RESPALDOS);
+}
+
+function respaldarInventario() {
+  try {
+    const fecha = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+    const nombre = 'Respaldo ' + fecha;
+    const carpeta = carpetaRespaldos();
+
+    const copia = SpreadsheetApp.create(nombre);
+    DriveApp.getFileById(copia.getId()).moveTo(carpeta);
+
+    TABLAS_RESPALDO.forEach(function (nombreHoja, i) {
+      const origen = hoja(nombreHoja);
+      const datos = origen.getDataRange().getValues();
+      const destino = i === 0 ? copia.getSheets()[0].setName(nombreHoja) : copia.insertSheet(nombreHoja);
+      if (datos.length) destino.getRange(1, 1, datos.length, datos[0].length).setValues(datos);
+    });
+
+    limpiarRespaldosViejos(carpeta);
+
+    const resumen = 'Respaldo guardado: "' + nombre + '" en la carpeta "' + CARPETA_RESPALDOS + '".';
+    Logger.log(resumen);
+    return resumen;
+  } catch (err) {
+    const mensaje = 'RESPALDO FALLIDO — no se guardó ninguna copia del inventario hoy. Motivo: ' +
+                    String(err && err.message || err) + '. Revise que existan las hojas MOLDES, ' +
+                    'PIEZAS, PRODUCTOS y VENTAS (ejecute prepararHoja si hace falta) y que el script ' +
+                    'tenga permiso sobre Drive (vuelva a autorizarlo si se lo pide).';
+    Logger.log(mensaje);
+    throw new Error(mensaje);
+  }
+}
+
+/** Conserva los MAX_RESPALDOS más recientes en la carpeta; borra el resto. */
+function limpiarRespaldosViejos(carpeta) {
+  const archivos = [];
+  const it = carpeta.getFiles();
+  while (it.hasNext()) {
+    const f = it.next();
+    if (f.getName().indexOf('Respaldo ') === 0) archivos.push(f);
+  }
+  archivos.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
+  for (var i = MAX_RESPALDOS; i < archivos.length; i++) archivos[i].setTrashed(true);
+}
+
+
 /**
  * Toma el mismo candado que doPost(), para que esta función no se cruce con
  * una sincronización en curso desde el celular. Se usa alrededor de
@@ -448,12 +514,50 @@ function conCandado(fn) {
  * Deja MOLDES y PIEZAS vacías, conservando encabezados.
  * PRODUCTOS y VENTAS no se tocan: ahí viven los precios y el historial.
  *
+ * Antes de borrar, se detiene sola si hay trabajo real que perder (piezas
+ * con existencia, moldes marcados dañados o sin molde, piezas con recorte
+ * marcado a mano, moldes con ubicación anotada). Para forzarla de todos
+ * modos, llame borrarInventario(true).
+ *
+ * Siempre guarda un respaldo (respaldarInventario) justo antes de borrar,
+ * incluso cuando no había nada que la detuviera.
+ *
  * Úselo cuando la carga quede inconsistente y vaya a reimportar desde Drive.
  * Borrar los moldes a mano y olvidar las piezas deja piezas huérfanas, que
  * aparecen en la app como "Sin nombre / No lo tengo".
  */
-function borrarInventario() {
+function borrarInventario(forzar) {
   return conCandado(function () {
+    const piezas = leerPiezas();
+    const moldes = leerMoldes();
+
+    const conExistencia  = piezas.filter(function (p) { return Number(p.existencia) > 0; }).length;
+    const moldesNoBuenos = moldes.filter(function (m) { return m.estado !== 'bueno'; }).length;
+    const conRecorte     = piezas.filter(function (p) { return String(p.recorte || '').trim() !== ''; }).length;
+    const conUbicacion   = moldes.filter(function (m) { return String(m.ubicacion || '').trim() !== ''; }).length;
+
+    if (!forzar && (conExistencia > 0 || moldesNoBuenos > 0 || conRecorte > 0 || conUbicacion > 0)) {
+      const detalle = [];
+      if (conExistencia > 0) detalle.push(
+        '  • ' + conExistencia + ' pieza(s) con existencia en bodega: se perdería el conteo real de inventario.');
+      if (moldesNoBuenos > 0) detalle.push(
+        '  • ' + moldesNoBuenos + ' molde(s) marcado(s) como dañado o sin molde: volverían a aparecer como disponibles.');
+      if (conRecorte > 0) detalle.push(
+        '  • ' + conRecorte + ' pieza(s) con el recorte marcado a mano sobre la foto: habría que volver a marcarlas.');
+      if (conUbicacion > 0) detalle.push(
+        '  • ' + conUbicacion + ' molde(s) con la ubicación anotada (caja/estante): se perdería esa nota.');
+
+      const mensaje = 'borrarInventario() se detuvo: hay trabajo real que se perdería.\n\n' +
+                      detalle.join('\n') + '\n\n' +
+                      'Nada se borró. Si de verdad quiere borrar todo esto de todos modos, ' +
+                      'ejecute borrarInventario(true) — con el paréntesis y "true" adentro, ' +
+                      'exactamente así — desde el editor de Apps Script.';
+      Logger.log(mensaje);
+      throw new Error(mensaje);
+    }
+
+    respaldarInventario();
+
     var borradas = 0;
     [HOJA_MOLDES, HOJA_PIEZAS].forEach(function (nombre) {
       const h = hoja(nombre);
@@ -461,6 +565,7 @@ function borrarInventario() {
       if (n > 0) { h.deleteRows(2, n); borradas += n; }
     });
     const resumen = borradas + ' filas borradas de MOLDES y PIEZAS.\n' +
+                    'Se guardó un respaldo antes de borrar, en la carpeta "' + CARPETA_RESPALDOS + '".\n' +
                     'PRODUCTOS y VENTAS quedaron intactas.\n\n' +
                     'Ahora ejecute importarDesdeCarpeta y sincronice en la app.';
     Logger.log(resumen);
