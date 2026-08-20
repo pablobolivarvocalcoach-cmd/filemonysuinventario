@@ -87,6 +87,48 @@ else ok('El inventario vive solo en PIEZAS');
 if (!colZ.includes('idMolde')) falla('PIEZAS no apunta a su molde');
 else ok('Cada pieza apunta a su molde');
 
+/* ─────────────────────────────── orden de columnas, congelado */
+grupo('Orden de columnas (congelado — ver CLAUDE.md § Columnas nuevas: siempre al final)');
+
+// Snapshot deliberado del orden actual de cada COL_*. Se actualiza a mano
+// cuando se agrega una columna de verdad (siempre al final). Si esta prueba
+// falla sin que haya un cambio a propósito, es la misma corrida que ya pasó:
+// alguien insertó una columna en la mitad y descuadró encabezados con datos.
+const ORDEN_ESPERADO = {
+  COL_MOLDES: ['id', 'codigo', 'nombre', 'categoria', 'claves', 'medidas', 'cavidades',
+               'dias', 'estado', 'ubicacion', 'notas', 'foto', 'giro', 'actualizado', 'columnas'],
+  COL_PIEZAS: ['id', 'idMolde', 'numero', 'nombre', 'claves', 'existencia', 'minimo',
+               'actualizado', 'recorte'],
+  COL_PRODUCTOS: ['id', 'nombre', 'precio', 'piezas', 'notas', 'actualizado'],
+  COL_VENTAS: ['fecha', 'idProducto', 'producto', 'precio', 'total', 'detalle', 'cliente', 'nota'],
+};
+
+for (const [nombre, esperado] of Object.entries(ORDEN_ESPERADO)) {
+  const actual = columnasDe(nombre);
+  if (!actual.length) { falla(`No se pudo leer ${nombre} de Codigo.gs`); continue; }
+
+  const mismoOrden = actual.length === esperado.length && actual.every((c, i) => c === esperado[i]);
+  if (mismoOrden) { ok(`${nombre} mantiene el orden congelado (${actual.length} columnas)`); continue; }
+
+  const agregadasAlFinal = actual.length > esperado.length && esperado.every((c, i) => c === actual[i]);
+  const mismoConjuntoOtroOrden = actual.length === esperado.length && esperado.every(c => actual.includes(c));
+
+  if (agregadasAlFinal) {
+    falla(`${nombre} tiene columna(s) nueva(s) al final que ORDEN_ESPERADO en verificar.mjs todavía no conoce: ` +
+          `${actual.slice(esperado.length).join(', ')}. Si de verdad las agregó al final, actualice ` +
+          `ORDEN_ESPERADO.${nombre} en verificar.mjs para congelar el nuevo orden.`);
+  } else if (mismoConjuntoOtroOrden) {
+    falla(`${nombre} tiene las mismas columnas pero en otro orden. Esto es exactamente el bug que ya ` +
+          `rompió la hoja una vez (columna insertada en la mitad). Revierta el orden o, si el cambio es ` +
+          `intencional, actualice ORDEN_ESPERADO.${nombre} en verificar.mjs a mano tras confirmar que las ` +
+          `filas viejas de la hoja se re-escribieron con el nuevo orden.`);
+  } else {
+    falla(`${nombre} no calza con el orden congelado.\n` +
+          `      actual:   [${actual.join(', ')}]\n` +
+          `      esperado: [${esperado.join(', ')}]`);
+  }
+}
+
 /* ─────────────────────────────── 5. app ↔ backend */
 grupo('Acoplamiento entre la app y la hoja');
 

@@ -240,3 +240,11 @@ del vecino. Pasó al agregar `columnas` y dejó todos los moldes sin foto.
 
 Agregue siempre al final del arreglo, aunque quede menos ordenado de leer. Las
 filas viejas devuelven vacío en la columna nueva, que es exactamente lo correcto.
+
+`npm run check` congela el orden actual de `COL_MOLDES`, `COL_PIEZAS`,
+`COL_PRODUCTOS` y `COL_VENTAS` en `ORDEN_ESPERADO`, dentro de `verificar.mjs`, y
+falla si el orden real no calza con ese congelado — no solo si cambia el
+conjunto de columnas. Al agregar una columna de verdad al final, actualice
+`ORDEN_ESPERADO` a mano en `verificar.mjs` en el mismo cambio; si el verificador
+falla y usted no agregó nada, es la señal de que algo movió una columna de
+lugar y hay que revisar antes de reimportar.
