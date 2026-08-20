@@ -85,26 +85,39 @@
         font-size:9px;color:#B4B4AC;letter-spacing:.06em}
   .foto img{width:100%;height:100%;object-fit:contain;display:block}
   .marcador{position:relative;background:var(--yeso);border:1px solid var(--linea);
-            border-radius:10px;overflow:hidden;line-height:0;cursor:crosshair}
-  .marcador img{width:100%;display:block}
-  .marca{position:absolute;border:2px solid var(--leon-hondo);border-radius:6px;
-         background:rgba(252,180,12,.18);color:var(--melena);font-family:var(--dato);
-         font-size:11px;display:flex;align-items:flex-start;justify-content:flex-start;
-         padding:2px 4px;line-height:1;pointer-events:none}
-  .marca.viva{border-color:var(--melena);border-width:3px;background:rgba(51,34,15,.16)}
+            border-radius:10px;overflow:hidden;line-height:0;touch-action:none;
+            -webkit-user-select:none;user-select:none}
+  .marcador img{width:100%;display:block;pointer-events:none}
+  /* Piezas ya marcadas que no son la actual: solo referencia, muy tenues y sin
+     capturar el toque, para que el espacio quede limpio para dibujar. */
+  .marca-fantasma{position:absolute;border:1.5px dashed var(--pizarra-2);border-radius:5px;
+                  opacity:.28;pointer-events:none}
+  /* La pieza actual: recuadro editable con tiradores en las esquinas. Proporción
+     libre — nada la fuerza a cuadrada. */
+  .marca-viva{position:absolute;border:2.5px solid var(--melena);border-radius:5px;
+             background:rgba(252,180,12,.22);touch-action:none}
+  .tirador{position:absolute;width:34px;height:34px;transform:translate(-50%,-50%);
+           border-radius:50%;background:#fff;border:3px solid var(--melena);
+           box-shadow:0 1px 4px rgba(36,23,8,.35);touch-action:none}
+  .tirador:active{background:var(--leon)}
+  .marcado-cuenta{font-family:var(--dato);font-size:11px;letter-spacing:.08em;
+                  text-transform:uppercase;color:var(--melena);font-weight:600;
+                  margin-bottom:6px;display:block}
   .tira{display:flex;flex-wrap:wrap;gap:7px}
-  .tp{display:flex;align-items:center;gap:7px;border:1px solid var(--linea);background:#fff;
-      border-radius:20px;padding:7px 11px;font-size:13px;color:var(--pizarra-2)}
-  .tp b{font-family:var(--dato);font-size:10.5px;background:var(--yeso);color:var(--tiza);
-        width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .tp{display:flex;align-items:center;gap:8px;border:1px solid var(--linea);background:#fff;
+      border-radius:22px;padding:10px 14px;font-size:13.5px;color:var(--pizarra-2);min-height:44px}
+  .tp b{font-family:var(--dato);font-size:11px;background:var(--yeso);color:var(--tiza);
+        width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+        flex:0 0 auto}
   .tp.puesta b{background:var(--leon);color:var(--melena)}
   .tp.viva{border-color:var(--melena);border-width:2px;font-weight:600;color:var(--melena)}
 
+  /* El recorte ya no se fuerza cuadrado (ver ajustarRecorte en JS), así que
+     la posición y el tamaño de la imagen se calculan ahí, no aquí: solo se
+     conoce el tamaño real de la foto cuando termina de cargar. Empieza en
+     opacity:0 para no mostrar un instante sin ajustar. */
   .foto.marcado{position:relative;overflow:hidden}
-  .foto.marcado img{position:absolute;max-width:none;
-                    width:calc(100% / var(--w));height:calc(100% / var(--h));
-                    left:calc(var(--x) / var(--w) * -100%);
-                    top:calc(var(--y) / var(--h) * -100%)}
+  .foto.marcado img{position:absolute;max-width:none;opacity:0;transition:opacity .12s}
   .foto.celda{position:relative;overflow:hidden}
   .foto.celda img{position:absolute;max-width:none;object-fit:cover;
                   width:calc(var(--cols) * 100%);height:calc(var(--filas) * 100%);
@@ -628,13 +641,38 @@ function leerRecorte(pieza){
   return {x:x, y:y, w:w, h:h};
 }
 
+/* El recorte manual es de proporción libre (ya no cuadrado), así que ya no
+   alcanza con una regla CSS: si el recuadro es, digamos, ancho y bajito,
+   escalar el ancho y el alto por separado para llenar la miniatura cuadrada
+   la estiraría. Aquí se calcula un solo factor de escala — el que hace que
+   el lado más exigente del recorte llene la miniatura — y se centra el otro
+   lado. Necesita el tamaño real de la foto (naturalWidth/naturalHeight), que
+   solo se conoce cuando la imagen termina de cargar.
+
+   Se cuelga de window a propósito: todo lo demás en este archivo vive dentro
+   del IIFE de arriba, pero el onload del <img> es un atributo HTML — corre
+   en el ámbito global, no ve las funciones privadas de aquí adentro. */
+function ajustarRecorte(img, r){
+  const nw = img.naturalWidth || 1, nh = img.naturalHeight || 1;
+  const anchoRecorte = Math.max(r.w * nw, 1e-6), altoRecorte = Math.max(r.h * nh, 1e-6);
+  const escala = 1 / Math.max(anchoRecorte, altoRecorte);
+  const wPct = nw * escala * 100, hPct = nh * escala * 100;
+  img.style.width = wPct + '%';
+  img.style.height = hPct + '%';
+  img.style.left = (-r.x * nw * escala * 100 + (100 - r.w * nw * escala * 100) / 2) + '%';
+  img.style.top  = (-r.y * nh * escala * 100 + (100 - r.h * nh * escala * 100) / 2) + '%';
+  img.style.opacity = '1';
+}
+window.ajustarRecorte = ajustarRecorte;
+
 function miniaturaPieza(m, pieza){
   const r = (Number(m.giro)||0) === 0 ? leerRecorte(pieza) : null;
   if (r){
     return `<span class="foto marcado" data-zoom="${esc(m.id)}" role="button" tabindex="0"
-                  aria-label="Ver la plancha completa"
-                  style="--x:${r.x};--y:${r.y};--w:${r.w};--h:${r.h}">
-        <img src="${esc(urlFoto(m.foto, 900))}" alt="" loading="lazy" onerror="this.src='${esc(m.foto)}'">
+                  aria-label="Ver la plancha completa">
+        <img src="${esc(urlFoto(m.foto, 900))}" alt="" loading="lazy"
+             onerror="this.src='${esc(m.foto)}'"
+             onload="ajustarRecorte(this, {x:${r.x},y:${r.y},w:${r.w},h:${r.h}})">
       </span>`;
   }
   const c = celdaDe(m, pieza);
@@ -1223,6 +1261,12 @@ function abrirMolde(id){
    Detectar las formas solo con la imagen sería frágil: planchas gris claro
    sobre fondo gris claro. Se marca a mano, que siempre acierta y sirve para
    cualquier forma, no solo cuadrículas. */
+/* Marcado manual: se dibuja arrastrando, se ajusta moviendo el recuadro o
+   estirando desde las esquinas, con Pointer Events (dedo o mouse, un solo
+   código para los dos). Nunca se le atribuye a una pieza sin marcar un
+   recorte adivinado por cuadrícula — "un recorte mal puesto es peor que
+   ninguno" — así que aquí no hay relleno automático: si no tiene `recorte`
+   guardado, empieza en blanco y solo se llena si la usuaria dibuja encima. */
 function abrirMarcado(idMolde){
   const m = moldes.find(x=>x.id===idMolde);
   if (!m || !m.foto){ brindis('Este molde no tiene foto.'); return; }
@@ -1233,21 +1277,20 @@ function abrirMarcado(idMolde){
   const suyas = piezasDe(m.id);
   if (!suyas.length){ brindis('Primero agregue las piezas del molde.'); return; }
 
-  const marcas = suyas.map(p=>{
-    const r = leerRecorte(p) || celdaARecorte(m, p);
-    return {id:p.id, numero:p.numero, nombre:p.nombre, r:r};
-  });
-  let actual = 0, tam = 0.3;
+  const marcas = suyas.map(p=>({id:p.id, numero:p.numero, nombre:p.nombre, r:leerRecorte(p)}));
+  let actual = marcas.findIndex(mk=>!mk.r);
+  if (actual === -1) actual = 0;
+  let arrastre = null;
+  const MIN = 0.02;
 
   const capa = abrir(`
     <div class="hoja-top"><h2>Marcar piezas</h2><button class="cerrar">×</button></div>
-    <span class="pista" style="margin:0 0 12px">Escoja una pieza abajo y toque sobre la foto
-      donde está. Ajuste el tamaño con − y +.</span>
+    <span class="marcado-cuenta" id="mCuenta"></span>
+    <span class="pista" style="margin:0 0 12px">Dibuje el recuadro arrastrando sobre la
+      pieza actual. Para ajustarlo, arrástrelo por dentro o estire desde una esquina.</span>
     <div class="marcador" id="marcador"><img alt=""></div>
     <div class="acciones" style="margin-top:12px">
-      <button class="btn btn-borde" id="mm">− Tamaño</button>
-      <button class="btn btn-borde" id="mM">+ Tamaño</button>
-      <button class="btn btn-borde" id="mQ">Quitar</button>
+      <button class="btn btn-borde" id="mQ">Quitar marca</button>
     </div>
     <div class="campo" style="margin-top:16px"><label>Piezas</label>
       <div class="tira" id="tira"></div></div>
@@ -1258,18 +1301,44 @@ function abrirMarcado(idMolde){
   const h = capa.querySelector('.hoja');
   const caja = h.querySelector('#marcador');
   const img = caja.querySelector('img');
+  const cuenta = h.querySelector('#mCuenta');
   img.src = urlFoto(m.foto, 1200);
 
-  const pintarMarcas = ()=>{
-    caja.querySelectorAll('.marca').forEach(e=>e.remove());
-    marcas.forEach((mk, i)=>{
-      if (!mk.r) return;
+  const fracXY = ev=>{
+    const r = img.getBoundingClientRect();
+    return {
+      fx: r.width  ? Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width))  : 0,
+      fy: r.height ? Math.max(0, Math.min(1, (ev.clientY - r.top)  / r.height)) : 0,
+    };
+  };
+
+  const pintar = ()=>{
+    caja.querySelectorAll('.marca-fantasma,.marca-viva').forEach(e=>e.remove());
+    marcas.forEach((mk,i)=>{
+      if (i === actual || !mk.r) return;
       const d = document.createElement('span');
-      d.className = 'marca' + (i === actual ? ' viva' : '');
+      d.className = 'marca-fantasma';
       d.style.cssText = `left:${mk.r.x*100}%;top:${mk.r.y*100}%;width:${mk.r.w*100}%;height:${mk.r.h*100}%`;
-      d.textContent = mk.numero;
       caja.appendChild(d);
     });
+    const mk = marcas[actual];
+    if (mk.r){
+      const viva = document.createElement('div');
+      viva.className = 'marca-viva';
+      viva.style.cssText = `left:${mk.r.x*100}%;top:${mk.r.y*100}%;width:${mk.r.w*100}%;height:${mk.r.h*100}%`;
+      ['nw','ne','sw','se'].forEach(esq=>{
+        const t = document.createElement('span');
+        t.className = 'tirador';
+        t.dataset.esquina = esq;
+        t.style.left = esq[1] === 'e' ? '100%' : '0%';
+        t.style.top  = esq[0] === 's' ? '100%' : '0%';
+        viva.appendChild(t);
+      });
+      caja.appendChild(viva);
+    }
+    const marcadas = marcas.filter(x=>x.r).length;
+    cuenta.textContent = `Pieza ${mk.numero} de ${marcas.length} — ${mk.nombre || 'Sin nombre'}` +
+                         ` · ${marcadas} marcada${marcadas===1?'':'s'}`;
     h.querySelectorAll('.tp').forEach((b,i)=>{
       b.classList.toggle('viva', i === actual);
       b.classList.toggle('puesta', !!marcas[i].r);
@@ -1279,47 +1348,87 @@ function abrirMarcado(idMolde){
   const tira = h.querySelector('#tira');
   marcas.forEach((mk,i)=>{
     const b = document.createElement('button');
+    b.type = 'button';
     b.className = 'tp';
     b.innerHTML = `<b>${esc(mk.numero)}</b><span></span>`;
     b.querySelector('span').textContent = mk.nombre || 'Sin nombre';
-    b.addEventListener('click', ()=>{ actual = i; pintarMarcas(); });
+    b.addEventListener('click', ()=>{ actual = i; arrastre = null; pintar(); });
     tira.appendChild(b);
   });
 
-  /* Cuadrado en píxeles de la foto: si no, la miniatura sale estirada. */
-  const ponerEn = (fx, fy)=>{
-    const w = Math.min(tam, topeTam());
-    const h2 = w * (img.naturalWidth || 1) / (img.naturalHeight || 1);
-    const mk = marcas[actual];
-    mk.r = {
-      x: Math.max(0, Math.min(1 - w, fx - w/2)),
-      y: Math.max(0, Math.min(1 - h2, fy - h2/2)),
-      w: w, h: h2,
-    };
-    pintarMarcas();
+  /* Al terminar de DIBUJAR una pieza nueva (no al mover ni al ajustar una que
+     ya tenía marca) se salta sola a la siguiente sin marcar, para poder
+     recorrer toda la plancha sin volver a tocar la tira de piezas. */
+  const avanzar = ()=>{
+    let sig = marcas.findIndex((mk,i)=> i>actual && !mk.r);
+    if (sig === -1) sig = marcas.findIndex(mk=>!mk.r);
+    if (sig === -1){ brindis('Todas las piezas quedaron marcadas.'); return; }
+    actual = sig;
   };
 
-  caja.addEventListener('click', ev=>{
-    const r = img.getBoundingClientRect();
-    if (!r.width) return;
-    ponerEn((ev.clientX - r.left)/r.width, (ev.clientY - r.top)/r.height);
+  caja.addEventListener('pointerdown', ev=>{
+    const esquina = ev.target.closest && ev.target.closest('[data-esquina]');
+    const cuerpo  = ev.target.closest && ev.target.closest('.marca-viva');
+    const {fx, fy} = fracXY(ev);
+    const mk = marcas[actual];
+    if (esquina){
+      arrastre = {modo:'esquina', esquina:esquina.dataset.esquina, base:Object.assign({}, mk.r)};
+    } else if (cuerpo && mk.r){
+      arrastre = {modo:'mover', base:Object.assign({}, mk.r), inicio:{fx,fy}};
+    } else {
+      arrastre = {modo:'dibujar', inicio:{fx,fy}};
+      mk.r = {x:fx, y:fy, w:0, h:0};
+    }
+    try{ caja.setPointerCapture(ev.pointerId); }catch(e){}
+    ev.preventDefault();
+    pintar();
   });
 
-  /* El recuadro es cuadrado en píxeles, así que en una foto apaisada el alto
-     crece más rápido que el ancho: hay que topar el tamaño o se sale del borde. */
-  const topeTam = ()=>Math.min(1, (img.naturalHeight || 1) / (img.naturalWidth || 1));
-
-  const reajustar = f=>{
-    tam = Math.max(0.08, Math.min(topeTam(), tam * f));
+  caja.addEventListener('pointermove', ev=>{
+    if (!arrastre) return;
+    const {fx, fy} = fracXY(ev);
     const mk = marcas[actual];
-    if (mk.r) ponerEn(mk.r.x + mk.r.w/2, mk.r.y + mk.r.h/2);
-  };
-  h.querySelector('#mm').addEventListener('click', ()=>reajustar(1/1.15));
-  h.querySelector('#mM').addEventListener('click', ()=>reajustar(1.15));
-  h.querySelector('#mQ').addEventListener('click', ()=>{ marcas[actual].r = null; pintarMarcas(); });
+    if (arrastre.modo === 'dibujar'){
+      const x0 = arrastre.inicio.fx, y0 = arrastre.inicio.fy;
+      mk.r = {x:Math.min(x0,fx), y:Math.min(y0,fy), w:Math.abs(fx-x0), h:Math.abs(fy-y0)};
+    } else if (arrastre.modo === 'mover'){
+      const dx = fx - arrastre.inicio.fx, dy = fy - arrastre.inicio.fy, b = arrastre.base;
+      mk.r = {
+        x: Math.max(0, Math.min(1 - b.w, b.x + dx)),
+        y: Math.max(0, Math.min(1 - b.h, b.y + dy)),
+        w: b.w, h: b.h,
+      };
+    } else if (arrastre.modo === 'esquina'){
+      const b = arrastre.base;
+      let x0, y0, x1, y1;
+      if (arrastre.esquina === 'nw'){ x0=fx; y0=fy; x1=b.x+b.w; y1=b.y+b.h; }
+      else if (arrastre.esquina === 'ne'){ x0=b.x; y0=fy; x1=fx; y1=b.y+b.h; }
+      else if (arrastre.esquina === 'sw'){ x0=fx; y0=b.y; x1=b.x+b.w; y1=fy; }
+      else { x0=b.x; y0=b.y; x1=fx; y1=fy; }
+      mk.r = {
+        x: Math.min(x0,x1), y: Math.min(y0,y1),
+        w: Math.abs(x1-x0), h: Math.abs(y1-y0),
+      };
+    }
+    pintar();
+  });
 
-  img.addEventListener('load', pintarMarcas, {once:true});
-  pintarMarcas();
+  const soltar = ev=>{
+    if (!arrastre) return;
+    const modo = arrastre.modo;
+    const mk = marcas[actual];
+    if (mk.r && (mk.r.w < MIN || mk.r.h < MIN)) mk.r = null;
+    arrastre = null;
+    if (modo === 'dibujar' && mk.r) avanzar();
+    pintar();
+  };
+  caja.addEventListener('pointerup', soltar);
+  caja.addEventListener('pointercancel', soltar);
+
+  h.querySelector('#mQ').addEventListener('click', ()=>{ marcas[actual].r = null; pintar(); });
+
+  img.addEventListener('load', pintar, {once:true});
+  pintar();
 
   h.querySelector('#mOk').addEventListener('click', async ev=>{
     ev.currentTarget.disabled = true;
@@ -1335,15 +1444,8 @@ function abrirMarcado(idMolde){
     await guardarLocal();
     cerrar();
     for (const p of cambiadas) await encolar('guardarPieza', p);
-    brindis(cambiadas.length ? `${cambiadas.length} piezas marcadas.` : 'Sin cambios.');
+    brindis(cambiadas.length ? `${cambiadas.length} pieza(s) marcadas.` : 'Sin cambios.');
   });
-}
-
-/* La cuadrícula sirve de punto de partida para el marcado manual. */
-function celdaARecorte(m, pieza){
-  const c = celdaDe(m, pieza);
-  if (!c) return null;
-  return {x:c.cx/c.cols, y:c.cy/c.filas, w:1/c.cols, h:1/c.filas};
 }
 
 /* ══════════ pieza ══════════ */
