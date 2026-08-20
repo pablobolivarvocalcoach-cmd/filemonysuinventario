@@ -1,0 +1,10 @@
+{
+  "name": "filemonysuinventario",
+  "version": "1.0.0",
+  "description": "Inventario interno de figuras de yeso, conectado a Google Sheets.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node verificar.mjs"
+  }
+}
