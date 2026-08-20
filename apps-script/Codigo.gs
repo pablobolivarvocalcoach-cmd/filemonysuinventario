@@ -16,6 +16,13 @@
 // ─────────────────────────────────────────────────────────────
 const CLAVE = 'CAMBIE-ESTA-CLAVE';
 
+// Súbala cada vez que pegue un Codigo.gs distinto aquí. prepararHoja() y
+// borrarInventario() la escriben en el Logger al arrancar, así se ve en el
+// registro de ejecución qué versión corrió de verdad — no la que usted cree
+// haber pegado. Este archivo se pega a mano en el editor (ver CLAUDE.md);
+// nada la sincroniza sola con el repositorio.
+const VERSION = '2026-08-20';
+
 const HOJA_MOLDES    = 'MOLDES';
 const HOJA_PIEZAS    = 'PIEZAS';
 const HOJA_PRODUCTOS = 'PRODUCTOS';
@@ -54,6 +61,7 @@ const PRODUCTOS_INICIALES = [
    ══════════════════════════════════════════════════════════════ */
 
 function prepararHoja() {
+  Logger.log('Ejecutando prepararHoja — Codigo.gs versión ' + VERSION);
   const libro = SpreadsheetApp.getActiveSpreadsheet();
 
   crearHoja(libro, HOJA_MOLDES,    COL_MOLDES,    '#2B3439');
@@ -527,6 +535,7 @@ function conCandado(fn) {
  * aparecen en la app como "Sin nombre / No lo tengo".
  */
 function borrarInventario(forzar) {
+  Logger.log('Ejecutando borrarInventario — Codigo.gs versión ' + VERSION);
   return conCandado(function () {
     const piezas = leerPiezas();
     const moldes = leerMoldes();

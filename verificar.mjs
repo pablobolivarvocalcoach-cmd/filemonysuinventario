@@ -30,6 +30,14 @@ else if (clave !== 'CAMBIE-ESTA-CLAVE')
   falla(`CLAVE tiene un valor real ("${clave}"). Devuélvala al marcador antes de publicar.`);
 else ok('CLAVE sigue siendo el marcador');
 
+const version = (gs.match(/const\s+VERSION\s*=\s*'([^']*)'/) || [])[1];
+if (version === undefined) falla('No se encontró la constante VERSION en Codigo.gs');
+else if (!/^\d{4}-\d{2}-\d{2}$/.test(version)) falla(`VERSION ("${version}") no tiene forma de fecha AAAA-MM-DD`);
+else ok(`VERSION es ${version}`);
+
+if (!/Logger\.log\([^)]*VERSION/.test(gs)) aviso('No se detectó que VERSION se registre en el Logger al ejecutar prepararHoja/borrarInventario');
+else ok('VERSION queda en el Logger al ejecutar');
+
 const urlExec = html.match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}/);
 if (urlExec) falla(`Hay una URL /exec real incrustada en index.html: ${urlExec[0].slice(0, 60)}…`);
 else ok('index.html no trae URL de despliegue incrustada');
